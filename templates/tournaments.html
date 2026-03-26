@@ -53,12 +53,12 @@
                 </div>
                 <div>
                     <label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">🎮 Дисциплина</label>
-                    <select name="discipline" 
+                    <select name="discipline"
                         style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
                         <option value="">Все дисциплины</option>
                         {% for disc in disciplines %}
                         <option value="{{ disc.slug }}" {% if selected_discipline == disc.slug %}selected{% endif %}>
-                            {{ disc.icon or "🎮" }} {{ disc.name }}
+                            {% if disc.icon %}🖼️{% else %}🎮{% endif %} {{ disc.name }}
                         </option>
                         {% endfor %}
                     </select>
@@ -85,7 +85,11 @@
                 <div class="tournament-row">
                     <div class="tournament-info">
                         <span class="tournament-game">
-                            {{ tournament.discipline.icon if tournament.discipline else "🎮" }}
+                            {% if tournament.discipline and tournament.discipline.icon %}
+                            <img src="{{ tournament.discipline.icon }}" alt="{{ tournament.discipline.name }}" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle; margin-right: 6px;">
+                            {% else %}
+                            🎮
+                            {% endif %}
                             {{ tournament.discipline.name if tournament.discipline else "N/A" }}
                         </span>
                         <h3>{{ tournament.name }}</h3>
@@ -134,7 +138,11 @@
                 <div class="tournament-row">
                     <div class="tournament-info">
                         <span class="tournament-game">
-                            {{ tournament.discipline.icon if tournament.discipline else "🎮" }}
+                            {% if tournament.discipline and tournament.discipline.icon %}
+                            <img src="{{ tournament.discipline.icon }}" alt="{{ tournament.discipline.name }}" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle; margin-right: 6px;">
+                            {% else %}
+                            🎮
+                            {% endif %}
                             {{ tournament.discipline.name if tournament.discipline else "N/A" }}
                         </span>
                         <h3 style="color: var(--text-secondary);">{{ tournament.name }}</h3>

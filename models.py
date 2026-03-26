@@ -58,7 +58,7 @@ class Discipline(Base):
     name = Column(String(100), nullable=False, unique=True)
     slug = Column(String(50), nullable=False, unique=True)
     description = Column(Text, nullable=True)
-    icon = Column(String(10), nullable=True)
+    icon = Column(String(500), nullable=True)  # URL иконки/изображения
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -238,15 +238,18 @@ def init_disciplines():
     db = SessionLocal()
     try:
         disciplines_data = [
-            {"name": "Dota 2", "slug": "dota2", "icon": "⚔️", "description": "Многопользовательская онлайн-игра в жанре MOBA"},
-            {"name": "Counter-Strike 2", "slug": "cs2", "icon": "🔫", "description": "Тактический шутер от первого лица"},
-            {"name": "Мир танков", "slug": "tanks", "icon": "🛡️", "description": "Многопользовательская онлайн-игра про танковые сражения"},
+            {"name": "Dota 2", "slug": "dota2", "icon": "/static/images/disciplines/dota2.png", "description": "Многопользовательская онлайн-игра в жанре MOBA"},
+            {"name": "Counter-Strike 2", "slug": "cs2", "icon": "/static/images/disciplines/cs2.png", "description": "Тактический шутер от первого лица"},
+            {"name": "Мир танков", "slug": "tanks", "icon": "/static/images/disciplines/tanks.png", "description": "Многопользовательская онлайн-игра про танковые сражения"},
         ]
         for disc_data in disciplines_data:
             existing = db.query(Discipline).filter(Discipline.slug == disc_data["slug"]).first()
             if not existing:
                 discipline = Discipline(**disc_data)
                 db.add(discipline)
+            else:
+                # Обновляем иконки для существующих дисциплин
+                existing.icon = disc_data["icon"]
         db.commit()
     finally:
         db.close()

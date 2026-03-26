@@ -13,7 +13,13 @@
         </div>
     </nav>
     <header class="discipline-header">
-        <span class="discipline-icon">{{ discipline.icon or "🎮" }}</span>
+        <span class="discipline-icon">
+            {% if discipline.icon %}
+            <img src="{{ discipline.icon }}" alt="{{ discipline.name }}" style="width: 64px; height: 64px; object-fit: contain;">
+            {% else %}
+            🎮
+            {% endif %}
+        </span>
         <h1>{{ discipline.name }}</h1>
         <p class="discipline-description">{{ discipline.description or "" }}</p>
     </header>
