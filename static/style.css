@@ -100,7 +100,15 @@ body {
 
 .hero h1 { font-size: 48px; margin-bottom: 20px; }
 .hero p { font-size: 18px; color: var(--text-secondary); margin-bottom: 30px; }
-.hero-buttons { display: flex; gap: 20px; }
+.hero-buttons { 
+    display: flex; 
+    gap: 20px; 
+    justify-content: center;
+}
+.hero-buttons .btn-large {
+    padding: 18px 48px;
+    font-size: 18px;
+}
 
 /* Buttons */
 .btn {
