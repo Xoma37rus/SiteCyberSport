@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 from models import User, News, get_db
-from admin import get_current_admin_user, require_admin
+from admin import get_current_admin_user, get_current_admin_user, require_admin
 from datetime import datetime
 
 router = APIRouter(prefix="/admin", tags=["news"])
@@ -17,6 +17,36 @@ UPLOAD_DIR = BASE_DIR / "static" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
+# Публичный роутер для новостей (без префикса /admin)
+public_router = APIRouter(tags=["public_news"])
+
+
+@public_router.get("/news", response_class=HTMLResponse)
+async def public_news_list(request: Request, db: Session = Depends(get_db)):
+    """Публичная страница всех новостей"""
+    news_list = db.query(News).filter(
+        News.is_published == True
+    ).order_by(News.created_at.desc()).all()
+
+    return templates.TemplateResponse("news.html", {
+        "request": request,
+        "news_list": news_list
+    })
+
+
+@public_router.get("/news/{news_id}", response_class=HTMLResponse)
+async def public_news_detail(request: Request, news_id: int, db: Session = Depends(get_db)):
+    """Публичная страница отдельной новости"""
+    news = db.query(News).filter(News.id == news_id, News.is_published == True).first()
+
+    if not news:
+        raise HTTPException(status_code=404, detail="Новость не найдена")
+
+    return templates.TemplateResponse("news_detail.html", {
+        "request": request,
+        "news": news
+    })
 
 
 @router.post("/news/upload-image")
