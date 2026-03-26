@@ -22,6 +22,11 @@
         <div class="news-feed">
             {% for news_item in news_list %}
             <article class="news-feed-item">
+                {% if news_item.image_url %}
+                <div class="news-feed-image" style="background-image: url('{{ news_item.image_url }}');"></div>
+                {% else %}
+                <div class="news-feed-image" style="background: linear-gradient(135deg, #00f0ff 0%, #3a86ff 100%);"></div>
+                {% endif %}
                 <div class="news-feed-content">
                     <h2><a href="/news/{{ news_item.id }}">{{ news_item.title }}</a></h2>
                     <p>{{ news_item.excerpt or news_item.content[:200] }}...</p>
