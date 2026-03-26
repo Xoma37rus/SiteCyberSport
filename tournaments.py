@@ -117,7 +117,7 @@ async def tournament_detail(
     tournament = db.query(Tournament).options(
         joinedload(Tournament.discipline),
         joinedload(Tournament.participations).joinedload(TournamentParticipation.team).joinedload(Team.captain),
-        joinedload(Tournament.participations).joinedload(Team).joinedload(Team.discipline)
+        joinedload(Tournament.participations).joinedload(TournamentParticipation.team).joinedload(Team.discipline)
     ).filter(Tournament.id == tournament_id).first()
     if not tournament:
         raise HTTPException(status_code=404, detail="Турнир не найден")
