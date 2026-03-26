@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/login" class="nav-link">Вход</a>
+        </div>
+    </nav>
+
+    <div class="admin-login-container">
+        <div class="admin-login-header">
+            <h1>Регистрация</h1>
+            <p>Присоединяйтесь к сообществу</p>
+        </div>
+        <div class="form-container">
+            {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="alert alert-success">{{ success }}</div>
+            {% endif %}
+            <form method="POST" action="/register">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="example@mail.com">
+                </div>
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" name="username" required placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Зарегистрироваться</button>
+            </form>
+            <p class="form-footer">Уже есть аккаунт? <a href="/login">Войти</a></p>
+        </div>
+    </div>
+</body>
+</html>

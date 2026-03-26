@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ discipline.name }} - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+    </nav>
+    <header class="discipline-header">
+        <span class="discipline-icon">{{ discipline.icon or "🎮" }}</span>
+        <h1>{{ discipline.name }}</h1>
+        <p class="discipline-description">{{ discipline.description or "" }}</p>
+    </header>
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('teams')">👥 Команды</button>
+            <button class="tab-btn" onclick="switchTab('stats')">📊 Статистика</button>
+        </div>
+        <div id="teams-tab" class="tab-content active">
+            {% if teams %}
+            <table class="teams-table">
+                <thead><tr><th>Рейтинг</th><th>Команда</th><th>Победы</th><th>Поражения</th><th>Винрейт</th></tr></thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td><span class="rank-badge rank-{{ loop.index }}">{{ loop.index }}</span></td>
+                        <td><strong>{{ team.name }}</strong></td>
+                        <td>{{ team.wins }}</td>
+                        <td>{{ team.losses }}</td>
+                        <td>
+                            <span style="
+                                padding: 4px 8px;
+                                border-radius: 4px;
+                                background: {% if team.win_rate >= 60 %}rgba(52, 211, 153, 0.2){% elif team.win_rate >= 40 %}rgba(251, 191, 36, 0.2){% else %}rgba(248, 113, 113, 0.2){% endif %};
+                                color: {% if team.win_rate >= 60 %}#34d399{% elif team.win_rate >= 40 %}#fbbf24{% else %}#f87171{% endif %};
+                                font-weight: bold;
+                            ">
+                                {{ "%.1f"|format(team.win_rate) }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="news-empty"><h3>Команд пока нет</h3></div>
+            {% endif %}
+        </div>
+        <div id="stats-tab" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value">{{ stats.total_matches }}</div><div class="stat-label">Матчей</div></div>
+                <div class="stat-card"><div class="stat-value">{{ stats.total_players }}</div><div class="stat-label">Игроков</div></div>
+                <div class="stat-card"><div class="stat-value">{{ stats.top_team }}</div><div class="stat-label">Лидер</div></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+    </script>
+</body>
+</html>

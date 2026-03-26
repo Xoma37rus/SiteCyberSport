@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Новости - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/news" class="nav-link" style="color: var(--accent-cyan);">Новости</a>
+            <a href="/login" class="nav-link">Вход</a>
+        </div>
+    </nav>
+    <div class="news-page-container">
+        <div class="news-header"><h1>Новости</h1></div>
+        <div class="news-feed">
+            {% for news_item in news_list %}
+            <article class="news-feed-item">
+                <div class="news-feed-content">
+                    <h2><a href="/news/{{ news_item.id }}">{{ news_item.title }}</a></h2>
+                    <p>{{ news_item.excerpt or news_item.content[:200] }}...</p>
+                    <a href="/news/{{ news_item.id }}" class="btn btn-primary btn-small">Читать далее →</a>
+                </div>
+            </article>
+            {% else %}
+            <div class="news-empty"><h3>Новостей пока нет</h3></div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

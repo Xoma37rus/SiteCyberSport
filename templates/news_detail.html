@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ news.title }} - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/news" class="nav-link">Новости</a>
+        </div>
+    </nav>
+    <article class="news-article-container">
+        <div class="news-article-content">
+            <h1 class="news-article-title">{{ news.title }}</h1>
+            <div class="news-article-body">{{ news.content | safe }}</div>
+            <a href="/news" class="btn btn-secondary">← Все новости</a>
+        </div>
+    </article>
+</body>
+</html>

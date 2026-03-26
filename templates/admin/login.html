@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход администратора - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">На сайт</a>
+        </div>
+    </nav>
+
+    <div class="admin-login-container" style="max-width: 500px; margin: 80px auto; padding: 20px;">
+        <div class="admin-login-header" style="text-align: center; margin-bottom: 30px;">
+            <svg style="width: 80px; height: 80px; margin-bottom: 20px;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00f0ff"/>
+                        <stop offset="100%" style="stop-color:#7b2cbf"/>
+                    </linearGradient>
+                </defs>
+                <path d="M50 10 L85 30 L85 70 L50 90 L15 70 L15 30 Z" fill="none" stroke="url(#adminGrad)" stroke-width="3"/>
+                <circle cx="50" cy="50" r="5" fill="#00f0ff"/>
+            </svg>
+            <h1 style="color: var(--text-primary); font-size: 32px; margin-bottom: 10px;">Админ-панель</h1>
+            <p style="color: var(--text-secondary);">Вход для администраторов</p>
+        </div>
+
+        <div class="form-container" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 40px;">
+            {% if error %}
+            <div style="padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; background: rgba(248, 113, 113, 0.2); color: #f87171; border: 1px solid #f87171;">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/admin/login" style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 13px;">Email</label>
+                    <input type="email" name="email" required placeholder="admin@example.com" style="padding: 14px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); color: var(--text-primary); font-size: 16px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 13px;">Пароль</label>
+                    <input type="password" name="password" required placeholder="••••••••" style="padding: 14px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); color: var(--text-primary); font-size: 16px;">
+                </div>
+                <button type="submit" style="padding: 14px; background: linear-gradient(135deg, #00f0ff, #3a86ff); color: var(--bg-primary); border: none; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s;">Войти</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <a href="/" style="color: var(--text-secondary); text-decoration: none; font-size: 14px;">← На главную</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

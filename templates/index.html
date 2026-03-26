@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyCyberPro - Киберспортивная платформа</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-discipline">
+                <a href="#" class="nav-link" onclick="toggleDisciplineMenu(event); return false;">Дисциплины <span id="discipline-arrow">▾</span></a>
+                <div class="discipline-dropdown" id="discipline-dropdown">
+                    <a href="/discipline/dota2">⚔️ Dota 2</a>
+                    <a href="/discipline/cs2">🔫 Counter-Strike 2</a>
+                    <a href="/discipline/tanks">🛡️ Мир танков</a>
+                </div>
+            </div>
+            <a href="/news" class="nav-link">Новости</a>
+            <a href="/tournaments" class="nav-link">Турниры</a>
+            <a href="/about" class="nav-link">О нас</a>
+            <a href="/login" class="nav-link">Вход</a>
+            <a href="/register" class="btn-nav">Регистрация</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <img class="hero-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <h1>Elevate Your Game.<br><span>Dominate the Scene.</span></h1>
+            <p>Ваша платформа для организации и участия в киберспортивных турнирах.</p>
+            <div class="hero-buttons">
+                <a href="/register" class="btn btn-primary btn-large">Начать</a>
+                <a href="/news" class="btn btn-secondary btn-large">Новости</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section disciplines-section">
+        <div class="container-wide">
+            <div class="section-header">
+                <h2>Дисциплины</h2>
+                <p class="section-subtitle">Выберите свою игру и докажите превосходство</p>
+            </div>
+            <div class="disciplines-grid">
+                {% for discipline in disciplines %}
+                <div class="discipline-card">
+                    <div class="discipline-header">
+                        <div class="discipline-icon-wrapper">{{ discipline.icon or "🎮" }}</div>
+                        <h3>{{ discipline.name }}</h3>
+                    </div>
+                    <div class="discipline-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ discipline.teams|length }}</div>
+                            <div class="stat-label">Команд</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ discipline.tournaments|length }}</div>
+                            <div class="stat-label">Турниров</div>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
+                        {{ discipline.description or "Киберспортивная дисциплина" }}
+                    </p>
+                    <a href="/discipline/{{ discipline.slug }}" class="discipline-link">View Stats →</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="section news-section">
+        <div class="container-wide">
+            <div class="section-header">
+                <h2>Новости</h2>
+                <p class="section-subtitle">Будьте в курсе последних событий</p>
+            </div>
+            <div class="news-grid">
+                {% for news_item in news_list %}
+                <article class="news-card">
+                    {% if news_item.image_url %}
+                    <div class="news-image" style="background-image: url('{{ news_item.image_url }}');"></div>
+                    {% else %}
+                    <div class="news-image" style="background: linear-gradient(135deg, #00f0ff 0%, #3a86ff 100%);"></div>
+                    {% endif %}
+                    <div class="news-content">
+                        <span class="news-date">{{ news_item.created_at.strftime('%d %B %Y') }}</span>
+                        <h3>{{ news_item.title[:50] }}{% if news_item.title|length > 50 %}...{% endif %}</h3>
+                        <p>{{ news_item.excerpt or news_item.content[:100] }}...</p>
+                        <a href="/news/{{ news_item.id }}" class="news-link">Читать далее →</a>
+                    </div>
+                </article>
+                {% else %}
+                <p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">Новости скоро появятся</p>
+                {% endfor %}
+            </div>
+            <div class="section-footer" style="margin-top: 40px; text-align: center;">
+                <a href="/news" class="btn btn-secondary">Все новости →</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section tournaments-section">
+        <div class="container-wide">
+            <div class="section-header">
+                <h2>Турниры</h2>
+                <p class="section-subtitle">Примите участие в ближайших соревнованиях</p>
+            </div>
+            <div class="tournaments-table">
+                {% for tournament in tournaments %}
+                <div class="tournament-row">
+                    <div class="tournament-info">
+                        <span class="tournament-game">{{ tournament.discipline.name if tournament.discipline else 'N/A' }}</span>
+                        <h3>{{ tournament.name }}</h3>
+                        <span class="tournament-format">{{ tournament.format | replace('_', ' ') | title }} • {% if tournament.is_online %}Онлайн{% else %}Оффлайн{% endif %}</span>
+                    </div>
+                    <div class="tournament-details">
+                        {% if tournament.prize_pool %}
+                        <span class="tournament-prize">🏆 {{ tournament.prize_pool }}</span>
+                        {% endif %}
+                        {% if tournament.start_date %}
+                        <span class="tournament-date">📅 {{ tournament.start_date.strftime('%d.%m.%Y') }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="tournament-actions">
+                        <span class="tournament-slots">{{ tournament.registered_teams_count }}/{{ tournament.max_teams }} команд</span>
+                        <a href="/tournament/{{ tournament.id }}" class="btn btn-primary btn-small">Подробнее</a>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <p>Турниров пока нет. Следите за обновлениями!</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="section-footer" style="margin-top: 40px; text-align: center;">
+                <a href="/tournaments" class="btn btn-secondary">Все турниры →</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>EasyCyberPro</h4>
+                <p>Ваша платформа для киберспортивных соревнований</p>
+            </div>
+            <div class="footer-section">
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a href="/about">О нас</a></li>
+                    <li><a href="/news">Новости</a></li>
+                    <li><a href="/tournaments">Турниры</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 EasyCyberPro. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleDisciplineMenu(event) {
+            event.preventDefault();
+            const dropdown = document.getElementById('discipline-dropdown');
+            const arrow = document.getElementById('discipline-arrow');
+            dropdown.classList.toggle('show');
+            arrow.textContent = dropdown.classList.contains('show') ? '▴' : '▾';
+        }
+
+        document.addEventListener('click', function(event) {
+            const discipline = document.querySelector('.nav-discipline');
+            const dropdown = document.getElementById('discipline-dropdown');
+            if (!discipline.contains(event.target)) {
+                dropdown.classList.remove('show');
+                arrow.textContent = '▾';
+            }
+        });
+    </script>
+</body>
+</html>

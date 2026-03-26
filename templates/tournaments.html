@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Турниры - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/news" class="nav-link">Новости</a>
+            <a href="/tournaments" class="nav-link" style="color: var(--accent-cyan);">Турниры</a>
+            <a href="/about" class="nav-link">О нас</a>
+            <a href="/login" class="nav-link">Вход</a>
+            <a href="/register" class="btn-nav">Регистрация</a>
+        </div>
+    </nav>
+
+    <div class="news-page-container">
+        <div class="news-header">
+            <h1>🏆 Турниры</h1>
+            <p style="color: var(--text-secondary); margin-top: 10px;">Участвуй в соревнованиях и выигрывай призы</p>
+        </div>
+
+        <!-- Поиск и фильтры -->
+        <div style="background: var(--bg-card); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+            <form method="GET" action="/tournaments" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px;">
+                <div>
+                    <label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">🔍 Поиск</label>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Название турнира..." 
+                        style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">🎮 Дисциплина</label>
+                    <select name="discipline" 
+                        style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                        <option value="">Все дисциплины</option>
+                        {% for disc in disciplines %}
+                        <option value="{{ disc.slug }}" {% if selected_discipline == disc.slug %}selected{% endif %}>
+                            {{ disc.icon or "🎮" }} {{ disc.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="height: 42px;">Применить</button>
+                    <a href="/tournaments" class="btn btn-secondary" style="height: 42px;">Сброс</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Активные турниры -->
+        <section style="margin-bottom: 50px;">
+            <h2 style="color: var(--text-primary); margin-bottom: 20px; font-size: 24px;">
+                🔥 Активные турниры
+                {% if total_active %}
+                <span style="font-size: 16px; color: var(--text-secondary); font-weight: normal;">({{ total_active }})</span>
+                {% endif %}
+            </h2>
+
+            {% if active_tournaments %}
+            <div class="tournaments-table">
+                {% for tournament in active_tournaments %}
+                <div class="tournament-row">
+                    <div class="tournament-info">
+                        <span class="tournament-game">
+                            {{ tournament.discipline.icon if tournament.discipline else "🎮" }}
+                            {{ tournament.discipline.name if tournament.discipline else "N/A" }}
+                        </span>
+                        <h3>{{ tournament.name }}</h3>
+                        <span class="tournament-format">
+                            {{ tournament.format | replace('_', ' ') | title }} •
+                            {% if tournament.is_online %}Онлайн{% else %}Оффлайн{% endif %}
+                        </span>
+                    </div>
+                    <div class="tournament-details">
+                        {% if tournament.prize_pool %}
+                        <span class="tournament-prize">🏆 {{ tournament.prize_pool }}</span>
+                        {% endif %}
+                        {% if tournament.start_date %}
+                        <span class="tournament-date">📅 {{ tournament.start_date.strftime('%d.%m.%Y') }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="tournament-actions">
+                        <span class="tournament-slots">
+                            {{ tournament.registered_teams_count }}/{{ tournament.max_teams }} команд
+                        </span>
+                        <a href="/tournament/{{ tournament.id }}" class="btn btn-primary btn-small">Подробнее</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="news-empty">
+                <h3>Активных турниров пока нет</h3>
+                <p style="color: var(--text-secondary);">Следите за обновлениями!</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Архив турниров -->
+        <section>
+            <h2 style="color: var(--text-secondary); margin-bottom: 20px; font-size: 24px;">
+                📚 Архив турниров
+                {% if total_archived %}
+                <span style="font-size: 16px; font-weight: normal;">({{ total_archived }})</span>
+                {% endif %}
+            </h2>
+
+            {% if archived_tournaments %}
+            <div class="tournaments-table" style="opacity: 0.7;">
+                {% for tournament in archived_tournaments %}
+                <div class="tournament-row">
+                    <div class="tournament-info">
+                        <span class="tournament-game">
+                            {{ tournament.discipline.icon if tournament.discipline else "🎮" }}
+                            {{ tournament.discipline.name if tournament.discipline else "N/A" }}
+                        </span>
+                        <h3 style="color: var(--text-secondary);">{{ tournament.name }}</h3>
+                        <span class="tournament-format" style="color: var(--text-secondary);">
+                            {{ tournament.format | replace('_', ' ') | title }} •
+                            {% if tournament.is_online %}Онлайн{% else %}Оффлайн{% endif %}
+                        </span>
+                    </div>
+                    <div class="tournament-details">
+                        {% if tournament.prize_pool %}
+                        <span class="tournament-prize" style="color: var(--text-secondary);">🏆 {{ tournament.prize_pool }}</span>
+                        {% endif %}
+                        {% if tournament.start_date %}
+                        <span class="tournament-date" style="color: var(--text-secondary);">📅 {{ tournament.start_date.strftime('%d.%m.%Y') }}</span>
+                        {% endif %}
+                        <span style="
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            background: {% if tournament.status == 'completed' %}rgba(168, 85, 247, 0.2){% else %}rgba(248, 113, 113, 0.2){% endif %};
+                            color: {% if tournament.status == 'completed' %}#a855f7{% else %}#f87171{% endif %};
+                            font-size: 12px;
+                            font-weight: bold;
+                            margin-left: 10px;
+                        ">
+                            {% if tournament.status == 'completed' %}Завершён{% else %}Отменён{% endif %}
+                        </span>
+                    </div>
+                    <div class="tournament-actions">
+                        <a href="/tournament/{{ tournament.id }}" class="btn btn-secondary btn-small">Подробнее</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="news-empty">
+                <h3 style="color: var(--text-secondary);">Архив пуст</h3>
+                <p style="color: var(--text-secondary);">Завершённые турниры появятся здесь</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Пагинация -->
+        {% if pages > 1 %}
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 40px;">
+            {% if page > 1 %}
+            <a href="/tournaments?page={{ page - 1 }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_discipline %}&discipline={{ selected_discipline }}{% endif %}" class="btn btn-secondary">← Назад</a>
+            {% endif %}
+
+            <span style="padding: 10px 20px; color: var(--text-secondary); align-self: center;">
+                Страница {{ page }} из {{ pages }}
+            </span>
+
+            {% if page < pages %}
+            <a href="/tournaments?page={{ page + 1 }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_discipline %}&discipline={{ selected_discipline }}{% endif %}" class="btn btn-secondary">Вперёд →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

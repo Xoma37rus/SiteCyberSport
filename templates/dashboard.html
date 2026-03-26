@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/news" class="nav-link">Новости</a>
+            <a href="/tournaments" class="nav-link">Турниры</a>
+            <a href="/my-tournaments" class="nav-link">Мои турниры</a>
+            <a href="/logout" class="btn-nav">Выйти</a>
+        </div>
+    </nav>
+
+    <div class="admin-login-container">
+        <div class="admin-login-header">
+            <h1>Личный кабинет</h1>
+            <p>Добро пожаловать в систему</p>
+        </div>
+        <div class="dashboard">
+            <p style="font-size: 18px; margin-bottom: 10px;">
+                👋 <strong style="color: var(--accent-cyan);">{{ user.username }}</strong>
+            </p>
+            <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                Ваш email подтверждён. Вы можете участвовать в турнирах.
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="/news" class="btn btn-primary">Новости</a>
+                <a href="/logout" class="btn btn-secondary">Выйти</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

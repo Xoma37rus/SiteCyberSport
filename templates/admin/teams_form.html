@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if action == "create" %}Создать команду{% else %}Редактировать команду{% endif %} - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/news" class="nav-link">Новости</a>
+            <a href="/admin/teams" class="nav-link" style="color: var(--accent-cyan);">Команды</a>
+            <a href="/admin/users" class="nav-link">Пользователи</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>{% if action == "create" %}Создать команду{% else %}Редактировать команду: {{ team.name }}{% endif %}</h1>
+            <a href="/admin/teams" class="btn btn-secondary">← Назад к списку</a>
+        </div>
+
+        {% if error %}
+        <div class="alert" style="padding: 15px; border-radius: 10px; text-align: center; background: rgba(248, 113, 113, 0.2); color: #f87171; margin-bottom: 20px;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="admin-form" style="max-width: 600px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Название команды *</label>
+                <input type="text" name="name" value="{{ team.name if team else '' }}" required
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Дисциплина *</label>
+                <select name="discipline_id" required
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                    <option value="">Выберите дисциплину</option>
+                    {% for disc in disciplines %}
+                    <option value="{{ disc.id }}" {% if team and team.discipline_id == disc.id %}selected{% endif %}>
+                        {{ disc.icon or "🎮" }} {{ disc.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Капитан команды</label>
+                <select name="captain_id"
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                    <option value="">Нет капитана</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if team and team.captain_id == user.id %}selected{% endif %}>
+                        {{ user.username }} ({{ user.email }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Описание команды</label>
+                <textarea name="description" rows="3"
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; resize: vertical;">{{ team.description if team else '' }}</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Победы</label>
+                    <input type="number" name="wins" value="{{ team.wins if team else 0 }}" min="0"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Поражения</label>
+                    <input type="number" name="losses" value="{{ team.losses if team else 0 }}" min="0"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Рейтинг</label>
+                    <input type="number" name="rating" value="{{ team.rating if team else 1000 }}" min="0" step="1"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                </div>
+            </div>
+
+            <!-- Предпросмотр винрейта -->
+            <div id="winrate-preview" style="
+                padding: 15px;
+                border-radius: 8px;
+                background: rgba(52, 211, 153, 0.1);
+                border: 1px solid rgba(52, 211, 153, 0.3);
+                margin-bottom: 20px;
+                text-align: center;
+            ">
+                <span style="color: var(--text-secondary);">Винрейт: </span>
+                <span id="winrate-value" style="font-size: 24px; font-weight: bold; color: #34d399;">0.0%</span>
+                <span style="color: var(--text-secondary); margin-left: 10px;">
+                    (матчей: <span id="matches-value">0</span>)
+                </span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" name="is_active" value="true" {% if not team or team.is_active %}checked{% endif %}
+                        style="width: 18px; height: 18px; accent-color: var(--accent-cyan);">
+                    <span style="color: var(--text-primary);">Активная команда</span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    {% if action == "create" %}✅ Создать команду{% else %}💾 Сохранить изменения{% endif %}
+                </button>
+                <a href="/admin/teams" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Автоматический расчёт винрейта при изменении побед/поражений
+        function updateWinRate() {
+            const winsInput = document.querySelector('input[name="wins"]');
+            const lossesInput = document.querySelector('input[name="losses"]');
+            const winrateValue = document.getElementById('winrate-value');
+            const matchesValue = document.getElementById('matches-value');
+
+            const wins = parseInt(winsInput.value) || 0;
+            const losses = parseInt(lossesInput.value) || 0;
+            const total = wins + losses;
+
+            let winrate = 0;
+            if (total > 0) {
+                winrate = (wins / total) * 100;
+            }
+
+            winrateValue.textContent = winrate.toFixed(1) + '%';
+            matchesValue.textContent = total;
+
+            // Цвет в зависимости от винрейта
+            const preview = document.getElementById('winrate-preview');
+            if (winrate >= 60) {
+                preview.style.background = 'rgba(52, 211, 153, 0.1)';
+                preview.style.borderColor = 'rgba(52, 211, 153, 0.3)';
+                winrateValue.style.color = '#34d399';
+            } else if (winrate >= 40) {
+                preview.style.background = 'rgba(251, 191, 36, 0.1)';
+                preview.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+                winrateValue.style.color = '#fbbf24';
+            } else {
+                preview.style.background = 'rgba(248, 113, 113, 0.1)';
+                preview.style.borderColor = 'rgba(248, 113, 113, 0.3)';
+                winrateValue.style.color = '#f87171';
+            }
+        }
+
+        document.querySelector('input[name="wins"]').addEventListener('input', updateWinRate);
+        document.querySelector('input[name="losses"]').addEventListener('input', updateWinRate);
+
+        // Инициализация при загрузке
+        updateWinRate();
+    </script>
+</body>
+</html>

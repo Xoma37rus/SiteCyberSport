@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение email - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+    </nav>
+
+    <div class="admin-login-container">
+        <div class="admin-login-header">
+            {% if error %}
+            <h1 style="color: #f87171;">Ошибка</h1>
+            {% else %}
+            <h1 style="color: #34d399;">Успешно!</h1>
+            {% endif %}
+        </div>
+        <div class="form-container">
+            {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+            <a href="/login" class="btn btn-primary" style="width: 100%;">Вернуться ко входу</a>
+            {% endif %}
+            {% if message %}
+            <div class="alert alert-success">{{ message }}</div>
+            <a href="/login" class="btn btn-primary" style="width: 100%;">Войти</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

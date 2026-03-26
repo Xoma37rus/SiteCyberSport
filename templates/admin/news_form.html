@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if action == 'create' %}Создать{% else %}Редактировать{% endif %} новость</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- TinyMCE WYSIWYG Editor -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+    <style>
+        .form-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .image-upload-container { border: 2px dashed var(--border-color); border-radius: 12px; padding: 20px; text-align: center; background: var(--bg-secondary); }
+        .image-preview { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 15px; display: none; }
+        .upload-btn { background: var(--bg-card); color: var(--text-secondary); padding: 12px 24px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .upload-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .form-hint { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+        #upload-status { margin-top: 10px; font-size: 14px; }
+        .status-success { color: #34d399; }
+        .status-error { color: #f87171; }
+        .autosave-indicator { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
+        .autosave-indicator.visible { opacity: 1; }
+        .autosave-indicator.saving { background: rgba(251, 191, 36, 0.9); color: #000; }
+        .autosave-indicator.saved { background: rgba(52, 211, 153, 0.9); color: #000; }
+        .emoji-panel { display: flex; flex-wrap: wrap; gap: 5px; padding: 10px; background: var(--bg-secondary); border-radius: 8px; margin-top: 10px; }
+        .emoji-btn { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 8px; cursor: pointer; font-size: 18px; transition: all 0.2s; }
+        .emoji-btn:hover { transform: scale(1.2); background: var(--accent-cyan); }
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/news" class="nav-link" style="color: var(--accent-cyan);">Новости</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <!-- Индикатор автосохранения -->
+    <div id="autosave-indicator" class="autosave-indicator">💾 Сохранено...</div>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>{% if action == 'create' %}✨ Создать новую{% else %}✏️ Редактировать{% endif %} новость</h1>
+            <a href="/admin/news" class="btn btn-secondary">← Назад</a>
+        </div>
+
+        <div class="news-form-container" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 40px;">
+            <form method="POST" class="news-form" id="newsForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token if csrf_token else '' }}">
+                <input type="hidden" id="draft-id" value="{{ news.id if news else '' }}">
+                
+                <div class="form-row">
+                    <div>
+                        <div class="form-group">
+                            <label for="title">Заголовок *</label>
+                            <input type="text" id="title" name="title" required value="{{ news.title if news else '' }}" placeholder="Введите заголовок новости" maxlength="200">
+                            <div class="form-hint">Максимум 200 символов</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="excerpt">Краткое описание (анонс)</label>
+                            <input type="text" id="excerpt" name="excerpt" value="{{ news.excerpt if news else '' }}" placeholder="Краткое описание для превью" maxlength="500">
+                            <div class="form-hint">Оставьте пустым для авто-генерации из заголовка</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="content">Содержимое *</label>
+                            <textarea id="content" name="content">{{ news.content if news else '' }}</textarea>
+                            <div class="emoji-panel">
+                                <span style="color: var(--text-muted); font-size: 13px; margin-right: 10px;">📌 Смайлики:</span>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('🏆')">🏆</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('🥇')">🥇</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('🎮')">🎮</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('🔥')">🔥</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('✨')">✨</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('📢')">📢</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('📅')">📅</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('💰')">💰</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('✅')">✅</button>
+                                <button type="button" class="emoji-btn" onclick="insertEmoji('⚡')">⚡</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="form-group">
+                            <label>Изображение</label>
+                            <div class="image-upload-container">
+                                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                                <label for="image-upload" class="upload-btn">📁 Выбрать файл</label>
+                                <div class="form-hint" style="margin-top: 10px;">или вставьте URL ниже</div>
+                                <input type="text" id="image_url" name="image_url" value="{{ news.image_url if news else '' }}" placeholder="https://..." style="margin-top: 10px; width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                                <div id="upload-status"></div>
+                                <img id="preview-img" class="image-preview" alt="Предпросмотр">
+                                <button type="button" id="clear-image" class="btn btn-secondary btn-small" style="margin-top: 10px; display: none;">Удалить изображение</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" name="is_published" {% if not news or news.is_published %}checked{% endif %} style="width: 20px; height: 20px;">
+                                <span style="font-size: 15px;">📢 Опубликовать сразу</span>
+                            </label>
+                            <div class="form-hint">Снимите галочку для сохранения в черновики</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>📊 Статистика:</label>
+                            <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; font-size: 13px;">
+                                <div style="margin-bottom: 8px;">📝 Символов: <strong id="char-count">0</strong></div>
+                                <div style="margin-bottom: 8px;">💾 Черновик: <strong id="draft-status">Не сохранён</strong></div>
+                                <div>⏰ Последнее сохранение: <strong id="last-saved">-</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 30px; display: flex; gap: 15px;">
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        {% if action == 'create' %}✨ Создать новость{% else %}💾 Сохранить изменения{% endif %}
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="saveDraft()">💾 Сохранить черновик</button>
+                    <a href="/admin/news" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==================== TinyMCE Editor ====================
+        tinymce.init({
+            selector: '#content',
+            language: 'ru',
+            height: 500,
+            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+            content_style: 'body { background: #1c2128; color: #ffffff; font-family: Segoe UI, sans-serif; font-size: 15px; }',
+            skin: 'oxide-dark',
+            content_css: 'dark',
+            branding: false,
+            promotion: false,
+            setup: function(editor) {
+                editor.on('change', function() {
+                    autoSave();
+                });
+            }
+        });
+
+        // ==================== Авто-сохранение ====================
+        let autoSaveTimer = null;
+        const AUTOSAVE_INTERVAL = 30000; // 30 секунд
+
+        function autoSave() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                saveDraft();
+            }, AUTOSAVE_INTERVAL);
+        }
+
+        function saveDraft() {
+            const title = document.getElementById('title').value;
+            const content = tinymce.get('content').getContent();
+            const excerpt = document.getElementById('excerpt').value;
+            const image_url = document.getElementById('image_url').value;
+            const draftId = document.getElementById('draft-id').value;
+
+            if (!title || !content) {
+                showAutosave('⚠️ Заполните заголовок и содержимое', 'error');
+                return;
+            }
+
+            // Сохраняем в localStorage
+            const draft = {
+                title,
+                content,
+                excerpt,
+                image_url,
+                saved_at: new Date().toISOString()
+            };
+            localStorage.setItem('news_draft', JSON.stringify(draft));
+
+            // Обновляем UI
+            document.getElementById('draft-status').textContent = 'Сохранён';
+            document.getElementById('last-saved').textContent = new Date().toLocaleTimeString('ru-RU');
+            showAutosave('💾 Черновик сохранён!', 'saved');
+        }
+
+        function loadDraft() {
+            const savedDraft = localStorage.getItem('news_draft');
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    if (!document.getElementById('title').value) {
+                        document.getElementById('title').value = draft.title;
+                    }
+                    if (!tinymce.get('content').getContent()) {
+                        tinymce.get('content').setContent(draft.content);
+                    }
+                    if (!document.getElementById('excerpt').value) {
+                        document.getElementById('excerpt').value = draft.excerpt;
+                    }
+                    if (!document.getElementById('image_url').value) {
+                        document.getElementById('image_url').value = draft.image_url;
+                    }
+                    document.getElementById('draft-status').textContent = 'Загружен из черновика';
+                    document.getElementById('last-saved').textContent = new Date(draft.saved_at).toLocaleTimeString('ru-RU');
+                } catch (e) {
+                    console.error('Ошибка загрузки черновика:', e);
+                }
+            }
+        }
+
+        function showAutosave(message, type) {
+            const indicator = document.getElementById('autosave-indicator');
+            indicator.textContent = message;
+            indicator.className = 'autosave-indicator visible ' + (type === 'error' ? 'saving' : 'saved');
+            
+            setTimeout(() => {
+                indicator.classList.remove('visible');
+            }, 3000);
+        }
+
+        // ==================== Счётчик символов ====================
+        function updateCharCount() {
+            const content = tinymce.get('content').getContent({ format: 'text' });
+            document.getElementById('char-count').textContent = content.length;
+        }
+
+        // ==================== Загрузка изображений ====================
+        const imageUpload = document.getElementById('image-upload');
+        const imageUrlInput = document.getElementById('image_url');
+        const previewImg = document.getElementById('preview-img');
+        const clearImageBtn = document.getElementById('clear-image');
+        const uploadStatus = document.getElementById('upload-status');
+
+        imageUpload.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                uploadStatus.innerHTML = '<span class="status-error">❌ Файл слишком большой (макс. 5MB)</span>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadStatus.innerHTML = '<span class="status-success">⏳ Загрузка...</span>';
+
+            try {
+                const response = await fetch('/admin/news/upload-image', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.location) {
+                    imageUrlInput.value = result.location;
+                    previewImg.src = result.location;
+                    previewImg.style.display = 'block';
+                    clearImageBtn.style.display = 'inline-block';
+                    uploadStatus.innerHTML = '<span class="status-success">✅ Изображение загружено!</span>';
+                    autoSave();
+                } else {
+                    uploadStatus.innerHTML = '<span class="status-error">❌ Ошибка: ' + (result.error || 'Неизвестная ошибка') + '</span>';
+                }
+            } catch (error) {
+                uploadStatus.innerHTML = '<span class="status-error">❌ Ошибка загрузки: ' + error.message + '</span>';
+            }
+
+            imageUpload.value = '';
+        });
+
+        imageUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url) {
+                previewImg.src = url;
+                previewImg.style.display = 'block';
+                clearImageBtn.style.display = 'inline-block';
+            } else {
+                previewImg.style.display = 'none';
+                clearImageBtn.style.display = 'none';
+            }
+        });
+
+        clearImageBtn.addEventListener('click', function() {
+            imageUrlInput.value = '';
+            previewImg.style.display = 'none';
+            clearImageBtn.style.display = 'none';
+            uploadStatus.innerHTML = '';
+        });
+
+        // ==================== Смайлики ====================
+        function insertEmoji(emoji) {
+            tinymce.get('content').insertContent(emoji);
+            autoSave();
+        }
+
+        // ==================== Инициализация ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загрузка черновика если это новая новость
+            {% if not news %}
+            loadDraft();
+            {% endif %}
+
+            // Обновление счётчика
+            if (tinymce.get('content')) {
+                tinymce.get('content').on('change', updateCharCount);
+            }
+
+            // Авто-сохранение при изменении полей
+            document.getElementById('title').addEventListener('input', autoSave);
+            document.getElementById('excerpt').addEventListener('input', autoSave);
+
+            // Предупреждение при закрытии с несохранёнными изменениями
+            window.addEventListener('beforeunload', function(e) {
+                const hasUnsaved = document.getElementById('draft-status').textContent === 'Не сохранён';
+                if (hasUnsaved) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        });
+
+        // ==================== Отправка формы ====================
+        document.getElementById('newsForm').addEventListener('submit', function(e) {
+            // Очищаем черновик после успешной отправки
+            localStorage.removeItem('news_draft');
+        });
+    </script>
+</body>
+</html>

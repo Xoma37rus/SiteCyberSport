@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if action == "create" %}Создать турнир{% else %}Редактировать турнир{% endif %} - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/news" class="nav-link">Новости</a>
+            <a href="/admin/teams" class="nav-link">Команды</a>
+            <a href="/admin/tournaments" class="nav-link" style="color: var(--accent-cyan);">Турниры</a>
+            <a href="/admin/users" class="nav-link">Пользователи</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>{% if action == "create" %}Создать турнир{% else %}Редактировать турнир: {{ tournament.name }}{% endif %}</h1>
+            <a href="/admin/tournaments" class="btn btn-secondary">← Назад к списку</a>
+        </div>
+
+        {% if error %}
+        <div class="alert" style="padding: 15px; border-radius: 10px; text-align: center; background: rgba(248, 113, 113, 0.2); color: #f87171; margin-bottom: 20px;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="admin-form" style="max-width: 700px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Название турнира *</label>
+                <input type="text" name="name" value="{{ tournament.name if tournament else '' }}" required
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Дисциплина *</label>
+                <select name="discipline_id" required
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                    <option value="">Выберите дисциплину</option>
+                    {% for disc in disciplines %}
+                    <option value="{{ disc.id }}" {% if tournament and tournament.discipline_id == disc.id %}selected{% endif %}>
+                        {{ disc.icon or "🎮" }} {{ disc.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Описание турнира</label>
+                <textarea name="description" rows="4"
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; resize: vertical;">{{ tournament.description if tournament else '' }}</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Призовой фонд</label>
+                    <input type="text" name="prize_pool" value="{{ tournament.prize_pool if tournament else '' }}" placeholder="например: 100 000 ₽"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Макс. команд</label>
+                    <input type="number" name="max_teams" value="{{ tournament.max_teams if tournament else 16 }}" min="2"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Статус</label>
+                    <select name="status"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                        <option value="upcoming" {% if tournament and tournament.status == 'upcoming' %}selected{% endif %}>Предстоящий</option>
+                        <option value="registration" {% if tournament and tournament.status == 'registration' %}selected{% endif %}>Регистрация</option>
+                        <option value="active" {% if tournament and tournament.status == 'active' %}selected{% endif %}>Активный</option>
+                        <option value="completed" {% if tournament and tournament.status == 'completed' %}selected{% endif %}>Завершён</option>
+                        <option value="cancelled" {% if tournament and tournament.status == 'cancelled' %}selected{% endif %}>Отменён</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Формат</label>
+                    <select name="format"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                        <option value="single_elimination" {% if tournament and tournament.format == 'single_elimination' %}selected{% endif %}>Single Elimination</option>
+                        <option value="double_elimination" {% if tournament and tournament.format == 'double_elimination' %}selected{% endif %}>Double Elimination</option>
+                        <option value="round_robin" {% if tournament and tournament.format == 'round_robin' %}selected{% endif %}>Round Robin</option>
+                        <option value="swiss" {% if tournament and tournament.format == 'swiss' %}selected{% endif %}>Swiss System</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Тип проведения</label>
+                    <select name="is_online"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                        <option value="true" {% if not tournament or tournament.is_online %}selected{% endif %}>Онлайн</option>
+                        <option value="false" {% if tournament and not tournament.is_online %}selected{% endif %}>Оффлайн</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Начало регистрации</label>
+                    <input type="datetime-local" name="registration_deadline" value="{{ tournament.registration_deadline.strftime('%Y-%m-%dT%H:%M') if tournament and tournament.registration_deadline else '' }}"
+                        style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Дата начала *</label>
+                    <input type="datetime-local" name="start_date" value="{{ tournament.start_date.strftime('%Y-%m-%dT%H:%M') if tournament and tournament.start_date else '' }}" required
+                        style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">Дата окончания</label>
+                    <input type="datetime-local" name="end_date" value="{{ tournament.end_date.strftime('%Y-%m-%dT%H:%M') if tournament and tournament.end_date else '' }}"
+                        style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">URL изображения (опционально)</label>
+                <input type="text" name="image_url" value="{{ tournament.image_url if tournament else '' }}" placeholder="https://..."
+                    style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 16px;">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    {% if action == "create" %}✅ Создать турнир{% else %}💾 Сохранить изменения{% endif %}
+                </button>
+                <a href="/admin/tournaments" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

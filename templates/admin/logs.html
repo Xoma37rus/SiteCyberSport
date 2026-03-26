@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Логи - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/logs" class="nav-link" style="color: var(--accent-cyan);">Логи</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+    <div class="admin-container">
+        <div class="admin-header"><h1>📋 Логи действий</h1><p>Всего: {{ total }}</p></div>
+        <table class="admin-table">
+            <thead><tr><th>ID</th><th>Время</th><th>Админ</th><th>Действие</th><th>Объект</th><th>Детали</th></tr></thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>#{{ log.id }}</td>
+                    <td>{{ log.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                    <td>{{ log.admin.username if log.admin else 'Система' }}</td>
+                    <td>{{ log.action }}</td>
+                    <td>{{ log.target_type }}{% if log.target_id %} #{{ log.target_id }}{% endif %}</td>
+                    <td>{{ log.details or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align: center; padding: 50px;">Логи пустые</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if pages > 1 %}
+        <div style="margin-top: 30px; text-align: center;">
+            {% if page > 1 %}<a href="/admin/logs?page={{ page - 1 }}" class="btn btn-secondary btn-small">← Назад</a>{% endif %}
+            <span style="color: var(--text-secondary); margin: 0 15px;">Страница {{ page }} из {{ pages }}</span>
+            {% if page < pages %}<a href="/admin/logs?page={{ page + 1 }}" class="btn btn-secondary btn-small">Вперёд →</a>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

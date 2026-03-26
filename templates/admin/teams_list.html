@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Команды - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/news" class="nav-link">Новости</a>
+            <a href="/admin/teams" class="nav-link" style="color: var(--accent-cyan);">Команды</a>
+            <a href="/admin/tournaments" class="nav-link">Турниры</a>
+            <a href="/admin/users" class="nav-link">Пользователи</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    {% if flash %}
+    <div class="admin-container" style="margin-top: 20px;">
+        <div class="alert" style="padding: 15px; border-radius: 10px; text-align: center; background: rgba(52, 211, 153, 0.2); color: #34d399;">
+            {{ flash.message }}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Управление командами</h1>
+            <a href="/admin/teams/create" class="btn btn-primary">+ Добавить команду</a>
+        </div>
+
+        <!-- Фильтр по дисциплинам -->
+        <div style="margin-bottom: 20px;">
+            <form method="GET" action="/admin/teams" style="display: flex; gap: 10px; align-items: center;">
+                <label style="color: var(--text-secondary);">Дисциплина:</label>
+                <select name="discipline" onchange="this.form.submit()" style="padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                    <option value="">Все дисциплины</option>
+                    {% for disc in disciplines %}
+                    <option value="{{ disc.slug }}" {% if selected_discipline == disc.slug %}selected{% endif %}>
+                        {{ disc.icon or "🎮" }} {{ disc.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Команда</th>
+                    <th>Дисциплина</th>
+                    <th>Капитан</th>
+                    <th>Победы</th>
+                    <th>Поражения</th>
+                    <th>Винрейт</th>
+                    <th>Рейтинг</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for team in teams %}
+                <tr>
+                    <td>#{{ team.id }}</td>
+                    <td><strong>{{ team.name }}</strong></td>
+                    <td>
+                        {% if team.discipline %}
+                        <span style="font-size: 14px;">{{ team.discipline.icon or "🎮" }} {{ team.discipline.name }}</span>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if team.captain %}
+                        {{ team.captain.username }}
+                        {% else %}
+                        <span style="color: var(--text-secondary);">Нет</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: #34d399;">{{ team.wins }}</td>
+                    <td style="color: #f87171;">{{ team.losses }}</td>
+                    <td>
+                        <span style="
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            background: {% if team.win_rate >= 60 %}rgba(52, 211, 153, 0.2){% elif team.win_rate >= 40 %}rgba(251, 191, 36, 0.2){% else %}rgba(248, 113, 113, 0.2){% endif %};
+                            color: {% if team.win_rate >= 60 %}#34d399{% elif team.win_rate >= 40 %}#fbbf24{% else %}#f87171{% endif %};
+                            font-weight: bold;
+                        ">
+                            {{ "%.1f"|format(team.win_rate) }}%
+                        </span>
+                    </td>
+                    <td>{{ "%.0f"|format(team.rating) }}</td>
+                    <td>
+                        {% if team.is_active %}
+                        <span style="color: #34d399;">✅ Активна</span>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">⏸️ Не активна</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/admin/teams/{{ team.id }}/edit" class="admin-btn admin-btn-secondary" title="Редактировать">✏️</a>
+                        <form method="POST" action="/admin/teams/{{ team.id }}/delete" style="display:inline;" onsubmit="return confirm('Удалить команду {{ team.name }}?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="admin-btn admin-btn-danger" title="Удалить">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 50px; color: var(--text-secondary);">
+                        Команд пока нет. <a href="/admin/teams/create" style="color: var(--accent-cyan);">Создайте первую!</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Пагинация -->
+        {% if pages > 1 %}
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            {% if page > 1 %}
+            <a href="/admin/teams?page={{ page - 1 }}{% if selected_discipline %}&discipline={{ selected_discipline }}{% endif %}" class="btn btn-secondary">← Назад</a>
+            {% endif %}
+
+            <span style="padding: 10px 20px; color: var(--text-secondary);">
+                Страница {{ page }} из {{ pages }}
+            </span>
+
+            {% if page < pages %}
+            <a href="/admin/teams?page={{ page + 1 }}{% if selected_discipline %}&discipline={{ selected_discipline }}{% endif %}" class="btn btn-secondary">Вперёд →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
