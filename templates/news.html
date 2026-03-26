@@ -30,7 +30,9 @@
                 <div class="news-feed-content">
                     <h2><a href="/news/{{ news_item.id }}">{{ news_item.title }}</a></h2>
                     <p>{{ news_item.excerpt or news_item.content[:200] }}...</p>
-                    <a href="/news/{{ news_item.id }}" class="btn btn-primary btn-small">Читать далее →</a>
+                    <div style="margin-top: 20px;">
+                        <a href="/news/{{ news_item.id }}" class="btn btn-primary btn-small">Читать далее →</a>
+                    </div>
                 </div>
             </article>
             {% else %}
