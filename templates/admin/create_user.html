@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создать пользователя - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-primary); font-weight: 500; }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group select {
+            width: 100%; padding: 12px; background: var(--bg-secondary);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            color: var(--text-primary); font-size: 14px;
+        }
+        .form-group input[type="checkbox"] { margin-right: 10px; }
+        .checkbox-group { display: flex; align-items: center; padding: 10px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 10px; }
+        .checkbox-group label { margin: 0; cursor: pointer; }
+        .form-actions { margin-top: 30px; display: flex; gap: 15px; }
+        .role-description { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/users" class="nav-link" style="color: var(--accent-cyan);">Пользователи</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Создать нового пользователя</h1>
+            <p>Заполните данные для создания учётной записи</p>
+        </div>
+
+        {% if flash %}
+        <div class="flash-message flash-{{ flash.type }}">{{ flash.message }}</div>
+        {% endif %}
+
+        <form method="POST" action="/admin/users/create">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group">
+                <label for="username">Имя пользователя *</label>
+                <input type="text" id="username" name="username" required placeholder="Введите имя пользователя">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required placeholder="example@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль *</label>
+                <input type="password" id="password" name="password" required placeholder="Минимум 6 символов" minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Роль *</label>
+                <select id="role" name="role" required>
+                    <option value="user">Пользователь</option>
+                    <option value="student">Ученик</option>
+                    <option value="student_pro">Ученик (Pro)</option>
+                    <option value="student_ult">Ученик (Ult)</option>
+                    <option value="trainer">Тренер</option>
+                    <option value="admin">Администратор</option>
+                </select>
+                <p class="role-description" id="role-desc">Обычный пользователь с базовыми правами доступа</p>
+            </div>
+
+            <div class="form-group">
+                <label>Дополнительные статусы</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is_active" name="is_active" value="true" checked>
+                    <label for="is_active">Активен</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is_verified" name="is_verified" value="true" checked>
+                    <label for="is_verified">Подтверждён</label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Создать пользователя</button>
+                <a href="/admin/users" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const roleDescriptions = {
+            'user': 'Обычный пользователь с базовыми правами доступа',
+            'student': 'Ученик - имеет доступ к учебным материалам и тренировкам',
+            'student_pro': 'Ученик (Pro) - расширенный доступ к учебным материалам',
+            'student_ult': 'Ученик (Ult) - полный доступ ко всем учебным материалам',
+            'trainer': 'Тренер - может управлять учениками и создавать тренировки',
+            'admin': 'Администратор - полный доступ ко всем функциям системы'
+        };
+        document.getElementById('role').addEventListener('change', function() {
+            document.getElementById('role-desc').textContent = roleDescriptions[this.value];
+        });
+    </script>
+</body>
+</html>

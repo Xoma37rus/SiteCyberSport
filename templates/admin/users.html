@@ -18,22 +18,28 @@
         </div>
     </nav>
     <div class="admin-container">
-        <div class="admin-header"><h1>Все пользователи</h1><p>Всего: {{ total }}</p></div>
+        <div class="admin-header">
+            <h1>Все пользователи</h1>
+            <p>Всего: {{ total }}</p>
+            <a href="/admin/users/create" class="btn btn-primary">➕ Создать пользователя</a>
+        </div>
         <form method="GET" action="/admin/users" style="margin-bottom: 25px; display: flex; gap: 10px;">
             <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск..." style="flex: 1; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
             <button type="submit" class="btn btn-primary">🔍 Найти</button>
             {% if search_query %}<a href="/admin/users" class="btn btn-secondary">Сброс</a>{% endif %}
         </form>
         <table class="admin-table">
-            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Статус</th><th>Роль</th><th>Действия</th></tr></thead>
+            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead>
             <tbody>
+                {% set role_icons = {'admin': '👑', 'trainer': '🎓', 'student_pro': '📚', 'student_ult': '💎', 'student': '📖', 'user': '👤'} %}
+                {% set role_names = {'admin': 'Администратор', 'trainer': 'Тренер', 'student_pro': 'Ученик (Pro)', 'student_ult': 'Ученик (Ult)', 'student': 'Ученик', 'user': 'Пользователь'} %}
                 {% for user in users %}
                 <tr>
                     <td>#{{ user.id }}</td>
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
+                    <td>{{ role_icons.get(user.role, '👤') }} {{ role_names.get(user.role, user.role) }}</td>
                     <td>{% if user.is_verified and user.is_active %}Активен{% else %}Не активен{% endif %}</td>
-                    <td>{% if user.is_admin %}👑 Админ{% else %}Пользователь{% endif %}</td>
                     <td>
                         <form method="POST" action="/admin/users/{{ user.id }}/toggle-admin" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="admin-btn admin-btn-secondary">{% if user.is_admin %}👑{% else %}➕{% endif %}</button></form>
                         <form method="POST" action="/admin/users/{{ user.id }}/delete" style="display:inline;" onsubmit="return confirm('Удалить?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="admin-btn admin-btn-danger">🗑️</button></form>

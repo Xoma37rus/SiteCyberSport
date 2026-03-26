@@ -8,7 +8,8 @@ from utils import (
     create_access_token,
     generate_csrf_token,
     validate_csrf_token,
-    create_flash_message
+    create_flash_message,
+    get_password_hash
 )
 from datetime import timedelta
 from config import settings
@@ -398,6 +399,97 @@ async def delete_user(
     response = RedirectResponse("/admin", status_code=303)
     response.set_cookie("flash_message", create_flash_message(
         f"Пользователь {username} удалён",
+        "success"
+    ))
+    return response
+
+
+@router.get("/users/create", response_class=HTMLResponse)
+async def create_user_page(request: Request, db: Session = Depends(get_db)):
+    """Страница создания нового пользователя"""
+    admin = require_admin(request, db)
+
+    flash_data = None
+    flash_cookie = request.cookies.get("flash_message")
+    if flash_cookie:
+        from utils import parse_flash_message
+        flash_data = parse_flash_message(flash_cookie)
+
+    csrf_token = generate_csrf_token()
+    response = templates.TemplateResponse("admin/create_user.html", {
+        "request": request,
+        "admin": admin,
+        "flash": flash_data,
+        "csrf_token": csrf_token
+    })
+    response.set_cookie("csrf_token", csrf_token, httponly=True, max_age=3600)
+    if flash_cookie:
+        response.delete_cookie("flash_message")
+    return response
+
+
+@router.post("/users/create")
+async def create_user(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Создание нового пользователя администратором"""
+    admin = require_admin(request, db)
+
+    form = await request.form()
+    session_token = request.cookies.get("csrf_token")
+    if not validate_csrf_token(form.get("csrf_token"), session_token):
+        raise HTTPException(status_code=403, detail="Ошибка безопасности (CSRF)")
+
+    email = form.get("email", "").strip()
+    username = form.get("username", "").strip()
+    password = form.get("password", "")
+    role = form.get("role", "user")
+    is_active = form.get("is_active") == "true"
+    is_verified = form.get("is_verified") == "true"
+    # is_admin устанавливается автоматически если роль admin
+    is_admin = role == "admin"
+
+    # Проверка на существующего пользователя
+    existing = db.query(User).filter(
+        (User.email == email) | (User.username == username)
+    ).first()
+
+    if existing:
+        if existing.email == email:
+            error = "Пользователь с таким email уже существует"
+        else:
+            error = "Пользователь с таким именем уже существует"
+
+        response = RedirectResponse("/admin/users/create", status_code=303)
+        response.set_cookie("flash_message", create_flash_message(error, "error"))
+        return response
+
+    # Создание пользователя
+    new_user = User(
+        email=email,
+        username=username,
+        hashed_password=get_password_hash(password),
+        is_active=is_active,
+        is_verified=is_verified,
+        is_admin=is_admin,
+        role=role
+    )
+
+    db.add(new_user)
+    db.commit()
+
+    log_admin_action(
+        db, admin, "create",
+        target_type="user",
+        target_id=new_user.id,
+        details=f"Created user: {username} ({email}), role: {role}",
+        request=request
+    )
+
+    response = RedirectResponse("/admin/users", status_code=303)
+    response.set_cookie("flash_message", create_flash_message(
+        f"Пользователь {username} успешно создан",
         "success"
     ))
     return response
