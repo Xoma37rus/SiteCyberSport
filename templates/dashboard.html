@@ -18,7 +18,23 @@
             <a href="/news" class="nav-link">Новости</a>
             <a href="/tournaments" class="nav-link">Турниры</a>
             <a href="/dashboard" class="nav-link active">Кабинет</a>
-            <a href="/logout" class="btn-nav">Выйти</a>
+            
+            {% if user %}
+            <div class="nav-user-menu">
+                <a href="/dashboard" class="nav-user-link">
+                    {% if user.avatar_url %}
+                    <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="nav-user-avatar">
+                    {% else %}
+                    <div class="nav-user-avatar-placeholder">{{ user.username[0].upper() }}</div>
+                    {% endif %}
+                    <span class="nav-user-name">{{ user.username }}</span>
+                </a>
+                <a href="/logout" class="btn-nav btn-nav-outline">Выйти</a>
+            </div>
+            {% else %}
+            <a href="/login" class="nav-link">Вход</a>
+            <a href="/register" class="btn-nav">Регистрация</a>
+            {% endif %}
         </div>
     </nav>
 
