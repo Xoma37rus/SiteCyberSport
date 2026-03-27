@@ -47,6 +47,64 @@
         </div>
     </nav>
 
+    <style>
+        /* User Menu in Navbar - для главной страницы */
+        .nav-user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-user-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-user-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-cyan);
+        }
+
+        .nav-user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .nav-user-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn-nav-outline {
+            background: transparent;
+            color: var(--accent-cyan);
+            border: 2px solid var(--accent-cyan);
+            padding: 8px 20px;
+        }
+    </style>
+
     <section class="hero">
         <div class="hero-content">
             <img class="hero-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
