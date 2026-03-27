@@ -205,14 +205,22 @@ async def login(
 
     # Редирект на /dashboard вместо рендеринга шаблона
     response = RedirectResponse(url="/dashboard", status_code=303)
-    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        max_age=1800,  # 30 минут
+        path="/",
+        samesite="lax"
+    )
     return response
 
 
 @router.get("/logout")
-async def logout(request: Request):
+async def logout(request: Request, db: Session = Depends(get_db)):
+    """Выход пользователя с удалением cookie"""
     response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie("access_token")
+    response.delete_cookie(key="access_token", path="/")
     return response
 
 
