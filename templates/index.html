@@ -257,9 +257,10 @@
         document.addEventListener('click', function(event) {
             const discipline = document.querySelector('.nav-discipline');
             const dropdown = document.getElementById('discipline-dropdown');
+            const arrow = document.getElementById('discipline-arrow');
             if (!discipline.contains(event.target)) {
                 dropdown.classList.remove('show');
-                arrow.textContent = '▾';
+                if (arrow) arrow.textContent = '▾';
             }
         });
     </script>
