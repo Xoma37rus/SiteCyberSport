@@ -27,6 +27,9 @@ def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)
     if not token:
         return None
 
+    # Удаляем кавычки если они есть
+    token = token.strip('"')
+    
     if token.startswith("Bearer "):
         token = token[7:]
 
@@ -211,6 +214,7 @@ async def login(
         httponly=True,
         max_age=1800,  # 30 минут
         path="/",
+        domain="localhost",
         samesite="lax"
     )
     return response
@@ -220,7 +224,7 @@ async def login(
 async def logout(request: Request, db: Session = Depends(get_db)):
     """Выход пользователя с удалением cookie"""
     response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="access_token", path="/", domain="localhost")
     return response
 
 

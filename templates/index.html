@@ -8,102 +8,7 @@
     <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
-            <a href="/">EasyCyberPro</a>
-        </div>
-        <div class="nav-menu">
-            <div class="nav-discipline">
-                <a href="#" class="nav-link" onclick="toggleDisciplineMenu(event); return false;">Дисциплины <span id="discipline-arrow">▾</span></a>
-                <div class="discipline-dropdown" id="discipline-dropdown">
-                    <a href="/discipline/dota2">⚔️ Dota 2</a>
-                    <a href="/discipline/cs2">🔫 Counter-Strike 2</a>
-                    <a href="/discipline/tanks">🛡️ Мир танков</a>
-                </div>
-            </div>
-            <a href="/news" class="nav-link">Новости</a>
-            <a href="/tournaments" class="nav-link">Турниры</a>
-            <a href="/about" class="nav-link">О нас</a>
-            
-            {% if current_user %}
-            <!-- Пользователь авторизован -->
-            <div class="nav-user-menu">
-                <a href="/dashboard" class="nav-user-link">
-                    {% if current_user.avatar_url %}
-                    <img src="{{ current_user.avatar_url }}" alt="{{ current_user.username }}" class="nav-user-avatar">
-                    {% else %}
-                    <div class="nav-user-avatar-placeholder">{{ current_user.username[0].upper() }}</div>
-                    {% endif %}
-                    <span class="nav-user-name">{{ current_user.username }}</span>
-                </a>
-                <a href="/logout" class="btn-nav btn-nav-outline">Выйти</a>
-            </div>
-            {% else %}
-            <!-- Пользователь не авторизован -->
-            <a href="/login" class="nav-link">Вход</a>
-            <a href="/register" class="btn-nav">Регистрация</a>
-            {% endif %}
-        </div>
-    </nav>
-
-    <style>
-        /* User Menu in Navbar - для главной страницы */
-        .nav-user-menu {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .nav-user-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        .nav-user-link:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--accent-cyan);
-        }
-
-        .nav-user-avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .nav-user-name {
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .btn-nav-outline {
-            background: transparent;
-            color: var(--accent-cyan);
-            border: 2px solid var(--accent-cyan);
-            padding: 8px 20px;
-        }
-    </style>
+    {% include 'includes/navbar.html' %}
 
     <section class="hero">
         <div class="hero-content">
@@ -244,25 +149,5 @@
             <p>&copy; 2026 EasyCyberPro. Все права защищены.</p>
         </div>
     </footer>
-
-    <script>
-        function toggleDisciplineMenu(event) {
-            event.preventDefault();
-            const dropdown = document.getElementById('discipline-dropdown');
-            const arrow = document.getElementById('discipline-arrow');
-            dropdown.classList.toggle('show');
-            arrow.textContent = dropdown.classList.contains('show') ? '▴' : '▾';
-        }
-
-        document.addEventListener('click', function(event) {
-            const discipline = document.querySelector('.nav-discipline');
-            const dropdown = document.getElementById('discipline-dropdown');
-            const arrow = document.getElementById('discipline-arrow');
-            if (!discipline.contains(event.target)) {
-                dropdown.classList.remove('show');
-                if (arrow) arrow.textContent = '▾';
-            }
-        });
-    </script>
 </body>
 </html>

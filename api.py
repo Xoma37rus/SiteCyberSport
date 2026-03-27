@@ -3,7 +3,7 @@ API Endpoints для EasyCyberPro
 REST API для frontend-разработки и мобильных приложений
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from models import get_db, User, News, Discipline, Team, Tournament
@@ -14,8 +14,21 @@ from schemas import (
     TournamentResponse, TournamentListResponse,
     UserResponse, HealthResponse
 )
+from auth import get_current_user_from_cookie
 
 router = APIRouter(prefix="/api/v1", tags=["API"])
+
+
+@router.get("/auth/me", response_model=UserResponse)
+async def get_current_user_api(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Получить текущего пользователя"""
+    user = get_current_user_from_cookie(request, db)
+    if not user:
+        raise HTTPException(status_code=401, detail="Пользователь не авторизован")
+    return user
 
 
 @router.get("/health", response_model=HealthResponse)

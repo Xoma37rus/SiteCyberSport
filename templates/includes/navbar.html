@@ -1,0 +1,106 @@
+<!-- Навигационная панель - общий компонент -->
+<nav class="navbar">
+    <div class="nav-brand">
+        <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+        <a href="/">EasyCyberPro</a>
+    </div>
+    <div class="nav-menu" id="nav-menu">
+        <div class="nav-discipline">
+            <a href="#" class="nav-link" onclick="toggleDisciplineMenu(event); return false;">Дисциплины <span id="discipline-arrow">▾</span></a>
+            <div class="discipline-dropdown" id="discipline-dropdown">
+                <a href="/discipline/dota2">⚔️ Dota 2</a>
+                <a href="/discipline/cs2">🔫 Counter-Strike 2</a>
+                <a href="/discipline/tanks">🛡️ Мир танков</a>
+            </div>
+        </div>
+        <a href="/news" class="nav-link">Новости</a>
+        <a href="/tournaments" class="nav-link">Турниры</a>
+        <a href="/about" class="nav-link">О нас</a>
+        
+        <!-- Контейнер для авторизации (заполняется через JavaScript) -->
+        <div id="auth-container">
+            <span class="nav-link">Загрузка...</span>
+        </div>
+    </div>
+</nav>
+
+<script>
+// Функция для обновления навигации на основе состояния авторизации
+function updateNavMenu(user) {
+    const authContainer = document.getElementById('auth-container');
+    if (!authContainer) return;
+    
+    if (user && user.username) {
+        // Пользователь авторизован
+        const avatarHtml = user.avatar_url 
+            ? `<img src="${user.avatar_url}" alt="${user.username}" class="nav-user-avatar">`
+            : `<div class="nav-user-avatar-placeholder">${user.username[0].toUpperCase()}</div>`;
+        
+        authContainer.innerHTML = `
+            <div class="nav-user-menu">
+                <a href="/dashboard" class="nav-user-link">
+                    ${avatarHtml}
+                    <span class="nav-user-name">${user.username}</span>
+                </a>
+                <a href="/logout" class="btn-nav btn-nav-outline">Выйти</a>
+            </div>
+        `;
+    } else {
+        // Пользователь не авторизован
+        authContainer.innerHTML = `
+            <a href="/login" class="nav-link">Вход</a>
+            <a href="/register" class="btn-nav">Регистрация</a>
+        `;
+    }
+}
+
+// Проверка авторизации при загрузке страницы
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/v1/auth/me', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            updateNavMenu(user);
+        } else {
+            updateNavMenu(null);
+        }
+    } catch (error) {
+        console.log('Auth check failed:', error);
+        updateNavMenu(null);
+    }
+}
+
+// Вызываем проверку авторизации после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+});
+
+// Функция для меню дисциплин
+function toggleDisciplineMenu(event) {
+    event.preventDefault();
+    const dropdown = document.getElementById('discipline-dropdown');
+    const arrow = document.getElementById('discipline-arrow');
+    if (dropdown && arrow) {
+        dropdown.classList.toggle('show');
+        arrow.textContent = dropdown.classList.contains('show') ? '▴' : '▾';
+    }
+}
+
+// Закрытие меню при клике вне
+document.addEventListener('click', function(event) {
+    const discipline = document.querySelector('.nav-discipline');
+    const dropdown = document.getElementById('discipline-dropdown');
+    const arrow = document.getElementById('discipline-arrow');
+    if (discipline && dropdown && !discipline.contains(event.target)) {
+        dropdown.classList.remove('show');
+        if (arrow) arrow.textContent = '▾';
+    }
+});
+</script>

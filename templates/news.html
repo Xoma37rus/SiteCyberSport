@@ -7,17 +7,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
-            <a href="/">EasyCyberPro</a>
-        </div>
-        <div class="nav-menu">
-            <a href="/" class="nav-link">Главная</a>
-            <a href="/news" class="nav-link" style="color: var(--accent-cyan);">Новости</a>
-            <a href="/login" class="nav-link">Вход</a>
-        </div>
-    </nav>
+    {% include 'includes/navbar.html' %}
     <div class="news-page-container">
         <div class="news-header"><h1>Новости</h1></div>
         <div class="news-feed">
