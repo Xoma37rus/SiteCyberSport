@@ -104,11 +104,16 @@ async def home(request: Request, db: Session = Depends(get_db)):
         joinedload(Tournament.discipline)
     ).order_by(Tournament.start_date.desc()).limit(3).all()
 
+    # Проверяем авторизацию пользователя
+    from auth import get_current_user_from_cookie
+    current_user = get_current_user_from_cookie(request, db)
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "news_list": news_list,
         "disciplines": disciplines,
-        "tournaments": tournaments
+        "tournaments": tournaments,
+        "current_user": current_user
     })
 
 
