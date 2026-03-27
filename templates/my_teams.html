@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои команды - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/news" class="nav-link">Новости</a>
+            <a href="/tournaments" class="nav-link">Турниры</a>
+            <a href="/dashboard" class="nav-link">Кабинет</a>
+            <a href="/logout" class="btn-nav">Выйти</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="user-mini-profile">
+                {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar">
+                {% else %}
+                <div class="user-avatar-placeholder">{{ user.username[0].upper() }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <h3>{{ user.username }}</h3>
+                    <p class="user-role">{{ user.role | title }}</p>
+                </div>
+            </div>
+            
+            <nav class="dashboard-nav">
+                <a href="/dashboard" class="dashboard-nav-item">
+                    <span class="icon">📊</span> Обзор
+                </a>
+                <a href="/profile" class="dashboard-nav-item">
+                    <span class="icon">👤</span> Профиль
+                </a>
+                <a href="/my-teams" class="dashboard-nav-item active">
+                    <span class="icon">👥</span> Мои команды
+                </a>
+                <a href="/my-tournaments" class="dashboard-nav-item">
+                    <span class="icon">🏆</span> Мои турниры
+                </a>
+                <a href="/settings" class="dashboard-nav-item">
+                    <span class="icon">⚙️</span> Настройки
+                </a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <div class="section-header">
+                <h1 class="dashboard-title">Мои команды</h1>
+                <a href="/create-team" class="btn btn-primary">+ Создать команду</a>
+            </div>
+
+            {% if teams %}
+            <div class="teams-grid">
+                {% for team in teams %}
+                <div class="team-card-large">
+                    <div class="team-card-header">
+                        <div class="team-logo">
+                            {% if team.logo_url %}
+                            <img src="{{ team.logo_url }}" alt="{{ team.name }}">
+                            {% else %}
+                            <div class="team-logo-placeholder">{{ team.name[0].upper() }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="team-card-info">
+                            <h3>{{ team.name }}</h3>
+                            <p class="team-discipline">
+                                {% if team.discipline.icon %}
+                                <img src="{{ team.discipline.icon }}" alt="{{ team.discipline.name }}" class="discipline-icon">
+                                {% else %}
+                                🎮
+                                {% endif %}
+                                {{ team.discipline.name }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="team-card-body">
+                        {% if team.description %}
+                        <p class="team-description">{{ team.description }}</p>
+                        {% endif %}
+                        
+                        <div class="team-stats-grid">
+                            <div class="team-stat">
+                                <span class="stat-label">Рейтинг</span>
+                                <span class="stat-value rating">{{ "%.0f"|format(team.rating) }}</span>
+                            </div>
+                            <div class="team-stat">
+                                <span class="stat-label">Победы</span>
+                                <span class="stat-value wins">{{ team.wins }}</span>
+                            </div>
+                            <div class="team-stat">
+                                <span class="stat-label">Поражения</span>
+                                <span class="stat-value losses">{{ team.losses }}</span>
+                            </div>
+                            <div class="team-stat">
+                                <span class="stat-label">Винрейт</span>
+                                <span class="stat-value winrate">{{ "%.1f"|format(team.win_rate) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="team-card-footer">
+                        <span class="team-status {% if team.is_active %}active{% endif %}">
+                            {% if team.is_active %}✓ Активна{% else %}⏸ Неактивна{% endif %}
+                        </span>
+                        <div class="team-actions">
+                            <button class="btn btn-secondary btn-small">Редактировать</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <h2>У вас пока нет команд</h2>
+                <p>Создайте свою первую команду и начните участвовать в турнирах</p>
+                <a href="/create-team" class="btn btn-primary btn-large">Создать команду</a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+            text-transform: capitalize;
+        }
+        
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .dashboard-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .dashboard-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .dashboard-nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+        
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-title {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .team-card-large {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .team-card-header {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .team-logo img, .team-logo-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .team-logo-placeholder {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .team-card-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+        
+        .team-discipline {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .discipline-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+        
+        .team-card-body {
+            padding: 20px;
+        }
+        
+        .team-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+        }
+        
+        .team-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .team-stat {
+            text-align: center;
+        }
+        
+        .stat-label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .stat-value.rating {
+            color: var(--accent-cyan);
+        }
+        
+        .stat-value.wins {
+            color: #34d399;
+        }
+        
+        .stat-value.losses {
+            color: #f87171;
+        }
+        
+        .stat-value.winrate {
+            color: var(--accent-blue);
+        }
+        
+        .team-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .team-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .team-status.active {
+            color: #34d399;
+        }
+        
+        .team-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h2 {
+            color: var(--text-primary);
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            margin: 0 0 30px 0;
+            font-size: 16px;
+        }
+    </style>
+</body>
+</html>

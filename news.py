@@ -1,13 +1,17 @@
 import os
 import uuid
+import logging
 from pathlib import Path
 from fastapi import APIRouter, Request, Depends, HTTPException, status, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 from models import User, News, get_db
-from admin import get_current_admin_user, get_current_admin_user, require_admin
+from admin import get_current_admin_user, require_admin
 from datetime import datetime
+from config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["news"])
 templates = Jinja2Templates(directory="templates")
@@ -23,15 +27,26 @@ public_router = APIRouter(tags=["public_news"])
 
 
 @public_router.get("/news", response_class=HTMLResponse)
-async def public_news_list(request: Request, db: Session = Depends(get_db)):
-    """Публичная страница всех новостей"""
-    news_list = db.query(News).filter(
-        News.is_published == True
-    ).order_by(News.created_at.desc()).all()
+async def public_news_list(
+    request: Request,
+    page: int = 1,
+    limit: int = 12,
+    db: Session = Depends(get_db)
+):
+    """Публичная страница всех новостей с пагинацией"""
+    offset = (page - 1) * limit
+
+    query = db.query(News).filter(News.is_published == True)
+    total = query.count()
+    news_list = query.order_by(News.created_at.desc()).offset(offset).limit(limit).all()
 
     return templates.TemplateResponse("news.html", {
         "request": request,
-        "news_list": news_list
+        "news_list": news_list,
+        "page": page,
+        "total": total,
+        "limit": limit,
+        "pages": (total + limit - 1) // limit
     })
 
 
@@ -55,30 +70,54 @@ async def upload_image(
     request: Request = None,
     db: Session = Depends(get_db)
 ):
-    """Загрузка изображения для новости"""
-    from admin import get_current_admin_user
+    """Загрузка изображения для новости с валидацией"""
     admin = get_current_admin_user(request, db)
     if not admin:
+        logger.warning("Unauthorized image upload attempt")
         return JSONResponse(status_code=403, content={"error": "Требуется авторизация"})
 
     try:
+        # Проверка размера файла
+        file_size = 0
+        contents = await file.read()
+        file_size = len(contents)
+        
+        if file_size > settings.max_upload_size_bytes:
+            logger.warning(f"Upload rejected: file too large ({file_size} bytes)")
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Файл слишком большой. Максимум {settings.max_upload_size_mb}MB"}
+            )
+
+        # Проверка расширения
         ext = os.path.splitext(file.filename)[1].lower()
         if ext not in ALLOWED_EXTENSIONS:
+            logger.warning(f"Upload rejected: invalid extension {ext}")
             return JSONResponse(
                 status_code=400,
                 content={"error": f"Недопустимый формат. Разрешены: {', '.join(ALLOWED_EXTENSIONS)}"}
             )
 
+        # Проверка MIME типа
+        if not file.content_type.startswith('image/'):
+            logger.warning(f"Upload rejected: invalid MIME type {file.content_type}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Файл не является изображением"}
+            )
+
         unique_filename = f"{uuid.uuid4().hex}{ext}"
         file_path = UPLOAD_DIR / unique_filename
 
-        contents = await file.read()
         with open(file_path, "wb") as f:
             f.write(contents)
 
         image_url = f"/static/uploads/{unique_filename}"
+        logger.info(f"Image uploaded: {unique_filename} by admin {admin.username}")
         return JSONResponse(content={"location": image_url})
+
     except Exception as e:
+        logger.error(f"Image upload error: {e}")
         return JSONResponse(status_code=500, content={"error": f"Ошибка загрузки: {str(e)}"})
 
 

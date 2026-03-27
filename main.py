@@ -1,8 +1,9 @@
+import logging
+from pathlib import Path
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from pathlib import Path
 from sqlalchemy.orm import Session, joinedload
 from models import create_tables, init_disciplines, News, Discipline, Tournament, get_db
 from auth import router as auth_router
@@ -13,8 +14,33 @@ from news import router as news_router, public_router as public_news_router
 from disciplines import router as disciplines_router
 from tournaments import router as tournaments_router
 from api import router as api_router
+from profile import router as profile_router
+from config import settings
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+# Настройка rate limiting
+limiter = Limiter(key_func=get_remote_address)
+limiter.default_limits = [
+    f"{settings.rate_limit_per_minute}/minute",
+    f"{settings.rate_limit_burst}/second"
+]
+
+# Настройка logging
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper()),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="EasyCyberPro - Киберспортивная платформа")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # CORS для cookie
 app.add_middleware(
@@ -46,9 +72,15 @@ app.include_router(public_news_router)
 app.include_router(disciplines_router)
 app.include_router(tournaments_router)
 app.include_router(api_router)
+app.include_router(profile_router)
 
-create_tables()
-init_disciplines()
+try:
+    create_tables()
+    init_disciplines()
+    logger.info("Database tables created and disciplines initialized")
+except Exception as e:
+    logger.error(f"Database initialization error: {e}")
+    raise
 
 
 @app.get("/health")

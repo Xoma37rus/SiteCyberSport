@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать команду - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="EasyCyberPro Logo">
+            <a href="/">EasyCyberPro</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">Главная</a>
+            <a href="/news" class="nav-link">Новости</a>
+            <a href="/tournaments" class="nav-link">Турниры</a>
+            <a href="/dashboard" class="nav-link">Кабинет</a>
+            <a href="/logout" class="btn-nav">Выйти</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="user-mini-profile">
+                {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar">
+                {% else %}
+                <div class="user-avatar-placeholder">{{ user.username[0].upper() }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <h3>{{ user.username }}</h3>
+                    <p class="user-role">{{ user.role | title }}</p>
+                </div>
+            </div>
+            
+            <nav class="dashboard-nav">
+                <a href="/dashboard" class="dashboard-nav-item">
+                    <span class="icon">📊</span> Обзор
+                </a>
+                <a href="/profile" class="dashboard-nav-item">
+                    <span class="icon">👤</span> Профиль
+                </a>
+                <a href="/my-teams" class="dashboard-nav-item active">
+                    <span class="icon">👥</span> Мои команды
+                </a>
+                <a href="/my-tournaments" class="dashboard-nav-item">
+                    <span class="icon">🏆</span> Мои турниры
+                </a>
+                <a href="/settings" class="dashboard-nav-item">
+                    <span class="icon">⚙️</span> Настройки
+                </a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <h1 class="dashboard-title">Создать команду</h1>
+
+            <div class="form-container">
+                <form method="POST" action="/create-team" class="team-form">
+                    <div class="form-group">
+                        <label for="name">Название команды *</label>
+                        <input type="text" id="name" name="name" required placeholder="Например: Cyber Warriors" minlength="3" maxlength="100">
+                        <small class="form-hint">От 3 до 100 символов</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="discipline_id">Дисциплина *</label>
+                        <select id="discipline_id" name="discipline_id" required>
+                            <option value="">Выберите дисциплину</option>
+                            {% for discipline in disciplines %}
+                            <option value="{{ discipline.id }}">
+                                {% if discipline.icon %}
+                                {{ discipline.icon }} 
+                                {% endif %}
+                                {{ discipline.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Описание команды</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Расскажите о вашей команде, целях и составе..."></textarea>
+                    </div>
+
+                    <div class="form-info">
+                        <h4>ℹ️ Информация</h4>
+                        <ul>
+                            <li>Вы станете капитаном команды</li>
+                            <li>Сможете приглашать участников</li>
+                            <li>Сможете участвовать в турнирах</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Создать команду</button>
+                        <a href="/my-teams" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+            text-transform: capitalize;
+        }
+        
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .dashboard-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .dashboard-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .dashboard-nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+        
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .dashboard-title {
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .form-container {
+            max-width: 600px;
+        }
+        
+        .team-form {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+        
+        .form-group select {
+            cursor: pointer;
+        }
+        
+        .form-hint {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .form-info {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .form-info h4 {
+            color: var(--accent-cyan);
+            margin: 0 0 15px 0;
+            font-size: 15px;
+        }
+        
+        .form-info ul {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .form-info li {
+            margin-bottom: 8px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+        }
+    </style>
+</body>
+</html>

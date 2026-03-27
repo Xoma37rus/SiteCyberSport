@@ -9,9 +9,16 @@ from mailer import send_verification_email
 from datetime import timedelta
 from config import settings
 from jose import jwt, JWTError
+import logging
+import re
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+# Валидация email regex
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
 
 def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)):
@@ -55,12 +62,40 @@ async def register(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter((User.email == email) | (User.username == username)).first()
-
-    if user:
+    # Валидация email
+    if not EMAIL_REGEX.match(email):
         return templates.TemplateResponse("register.html", {
             "request": request,
-            "error": "Пользователь с таким email или именем уже существует"
+            "error": "Некорректный формат email"
+        })
+
+    # Валидация username
+    if len(username) < 3 or len(username) > 50:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "Имя пользователя должно быть от 3 до 50 символов"
+        })
+
+    # Валидация пароля
+    if len(password) < 6:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "Пароль должен содержать минимум 6 символов"
+        })
+
+    email = email.lower().strip()
+    username = username.strip()
+
+    # Проверка на существующего пользователя с безопасным сообщением
+    existing_user = db.query(User).filter(
+        (User.email == email) | (User.username == username)
+    ).first()
+
+    if existing_user:
+        # Не раскрываем, какое именно поле занято
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "Пользователь с такими данными уже существует"
         })
 
     verification_token = create_verification_token(email)
@@ -77,12 +112,14 @@ async def register(
     db.add(new_user)
     db.commit()
 
+    logger.info(f"New user registered: {username} ({email})")
+
     # Отправка email (не критично если ошибка)
     try:
         if settings.mail_username and settings.mail_password:
             await send_verification_email(email, username, verification_token)
     except Exception as e:
-        print(f"Email not sent: {e}")
+        logger.warning(f"Email not sent to {email}: {e}")
 
     return templates.TemplateResponse("register.html", {
         "request": request,
@@ -166,52 +203,10 @@ async def login(
         expires_delta=timedelta(minutes=settings.access_token_expire_minutes)
     )
 
-    response = templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "user": user
-    })
+    # Редирект на /dashboard вместо рендеринга шаблона
+    response = RedirectResponse(url="/dashboard", status_code=303)
     response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
     return response
-
-
-@router.get("/dashboard")
-async def dashboard(request: Request, db: Session = Depends(get_db)):
-    """Личный кабинет - требует аутентификации"""
-    user = get_current_user_from_cookie(request, db)
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "user": user
-    })
-
-
-@router.get("/my-tournaments")
-async def my_tournaments(request: Request, db: Session = Depends(get_db)):
-    """Страница 'Мои турниры' - турниры где участвует пользователь"""
-    user = get_current_user_from_cookie(request, db)
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
-    # Получаем команды пользователя
-    from models import Team
-    user_teams = db.query(Team).filter(Team.captain_id == user.id).all()
-    user_teams_ids = [t.id for t in user_teams]
-
-    # Получаем заявки на турниры
-    participations = db.query(TournamentParticipation).options(
-        joinedload(TournamentParticipation.tournament).joinedload(Tournament.discipline),
-        joinedload(TournamentParticipation.team)
-    ).filter(
-        TournamentParticipation.team_id.in_(user_teams_ids) if user_teams_ids else False
-    ).order_by(TournamentParticipation.registered_at.desc()).all()
-
-    return templates.TemplateResponse("my_tournaments.html", {
-        "request": request,
-        "user": user,
-        "participations": participations
-    })
 
 
 @router.get("/logout")
@@ -219,6 +214,140 @@ async def logout(request: Request):
     response = RedirectResponse(url="/", status_code=303)
     response.delete_cookie("access_token")
     return response
+
+
+# ==================== Восстановление пароля ====================
+
+@router.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request):
+    """Страница запроса восстановления пароля"""
+    return templates.TemplateResponse("forgot_password.html", {"request": request})
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Запрос на восстановление пароля"""
+    user = db.query(User).filter(User.email == email.lower().strip()).first()
+
+    # Всегда показываем успех (не раскрываем наличие email)
+    success_message = (
+        "Если аккаунт с таким email существует, "
+        "вы получите инструкцию по сбросу пароля."
+    )
+
+    if user and user.is_verified:
+        # Создаём токен сброса
+        from models import PasswordResetToken
+        from utils import create_reset_token
+        from datetime import datetime, timedelta
+        from mailer import send_password_reset_email
+
+        token = create_reset_token()
+        expires_at = datetime.utcnow() + timedelta(hours=1)
+
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token=token,
+            expires_at=expires_at
+        )
+        db.add(reset_token)
+        db.commit()
+
+        logger.info(f"Password reset requested for: {email}")
+
+        # Отправляем email (не критично если ошибка)
+        try:
+            if settings.mail_username and settings.mail_password:
+                await send_password_reset_email(email, user.username, token)
+        except Exception as e:
+            logger.warning(f"Password reset email not sent to {email}: {e}")
+
+    return templates.TemplateResponse("forgot_password.html", {
+        "request": request,
+        "success": success_message
+    })
+
+
+@router.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request, token: str = None):
+    """Страница сброса пароля"""
+    if not token:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "error": "Токен не предоставлен"
+        })
+
+    # Проверяем токен
+    from models import PasswordResetToken
+    from datetime import datetime
+
+    reset_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == token,
+        PasswordResetToken.is_used == False,
+        PasswordResetToken.expires_at > datetime.utcnow()
+    ).first()
+
+    if not reset_token:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "error": "Неверный или истёкший токен"
+        })
+
+    return templates.TemplateResponse("reset_password.html", {
+        "request": request,
+        "token": token
+    })
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request: Request,
+    token: str = Form(...),
+    new_password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Сброс пароля"""
+    from models import PasswordResetToken
+    from datetime import datetime
+    from utils import get_password_hash
+
+    # Проверка пароля
+    if len(new_password) < 6:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "token": token,
+            "error": "Пароль должен содержать минимум 6 символов"
+        })
+
+    # Проверяем токен
+    reset_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == token,
+        PasswordResetToken.is_used == False,
+        PasswordResetToken.expires_at > datetime.utcnow()
+    ).first()
+
+    if not reset_token:
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "error": "Неверный или истёкший токен"
+        })
+
+    # Обновляем пароль
+    user = db.query(User).filter(User.id == reset_token.user_id).first()
+    if user:
+        user.hashed_password = get_password_hash(new_password)
+        reset_token.is_used = True
+        db.commit()
+        logger.info(f"Password reset successful for: {user.email}")
+
+    return templates.TemplateResponse("reset_password.html", {
+        "request": request,
+        "success": "Пароль успешно изменён! Теперь вы можете войти."
+    })
 
 
 @router.get("/about", response_class=HTMLResponse)

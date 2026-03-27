@@ -2,109 +2,105 @@
 
 ## Обзор проекта
 
-**EasyCyberPro** — это полнофункциональная веб-платформа для организации и участия в киберспортивных турнирах. Платформа предоставляет возможности для регистрации пользователей, создания и управления командами, участия в турнирах по различным дисциплинам (Dota 2, Counter-Strike 2, Мир Танков), а также мощную админ-панель для управления всем контентом.
+**EasyCyberPro** — это веб-платформа для киберспортивных соревнований, разработанная на **FastAPI** (Python). Платформа предоставляет функционал для регистрации пользователей, создания команд, участия в турнирах, публикации новостей и управления админ-панелью.
 
-### Основной стек технологий
+### Основные возможности
+
+- **Аутентификация и авторизация**: регистрация, вход, восстановление пароля, JWT-токены
+- **Пользовательские профили**: настройка профиля, статистика, социальные сети
+- **Команды**: создание и управление командами, приглашение участников
+- **Турниры**: регистрация на турниры, турнирные сетки, матчи
+- **Новости**: публикация и просмотр новостей платформы
+- **Дисциплины**: поддержка нескольких игровых дисциплин (Dota 2, CS2, Tanks)
+- **Админ-панель**: управление пользователями, логами, контентом
+- **REST API**: полный API для frontend и мобильных приложений
+- **Email-рассылка**: уведомления о событиях, подтверждение регистрации
+
+### Технологический стек
 
 | Компонент | Технология |
 |-----------|------------|
-| Backend | FastAPI (Python 3.9+) |
-| Database | SQLAlchemy + SQLite |
-| Migrations | Alembic |
-| Templates | Jinja2 |
-| Authentication | JWT (python-jose) |
-| Password Hashing | bcrypt |
-| Email | fastapi-mail (SMTP) |
-| Frontend | HTML5, CSS3, Vanilla JS |
+| Backend | FastAPI, Python 3.10+ |
+| База данных | SQLite (с поддержкой миграции на PostgreSQL) |
+| ORM | SQLAlchemy 2.0 |
+| Миграции | Alembic |
+| Шаблоны | Jinja2 |
+| Аутентификация | JWT (python-jose), bcrypt |
+| Валидация | Pydantic v2 |
+| Тестирование | pytest, pytest-asyncio, httpx |
+| Email | fastapi-mail |
+| Rate Limiting | slowapi |
 
-### Архитектура проекта
+---
+
+## Структура проекта
 
 ```
 web_app/
-├── main.py                    # Точка входа, регистрация роутеров
-├── config.py                  # Конфигурация через pydantic-settings
-├── models.py                  # SQLAlchemy модели (10 моделей)
-├── schemas.py                 # Pydantic схемы для API
-│
-├── auth.py                    # Аутентификация пользователей
-├── admin.py                   # Админ-панель (пользователи, логи)
-├── admin_teams.py             # CRUD команд (админ)
-├── admin_tournaments.py       # CRUD турниров + заявки (админ)
-├── news.py                    # Роутер новостей
-├── disciplines.py             # Роутер дисциплин
-├── tournaments.py             # Роутер турниров (пользователи)
-├── api.py                     # REST API endpoints (/api/v1/...)
-│
-├── mailer.py                  # Отправка email (верификация, уведомления)
-├── utils.py                   # Утилиты (хеширование, JWT, CSRF, flash)
-│
-├── seed_data.py               # Скрипт наполнения БД тестовыми данными
-├── test_site.py               # Скрипт тестирования функционала
-├── create_admin.py            # Скрипт создания администратора
-├── reset_admin_password.py    # Скрипт сброса пароля админа
-├── backup_db.py               # Резервное копирование БД
-│
-├── templates/                 # Jinja2 шаблоны
-│   ├── index.html             # Главная страница
-│   ├── login.html             # Вход
-│   ├── register.html          # Регистрация
-│   ├── dashboard.html         # Личный кабинет
-│   ├── my_tournaments.html    # Мои турниры
-│   ├── news.html              # Список новостей
-│   ├── news_detail.html       # Детальная новость
-│   ├── tournaments.html       # Турниры (с поиском и фильтрами)
-│   ├── tournament_detail.html # Детали турнира + регистрация
-│   ├── discipline.html        # Страница дисциплины
-│   ├── about.html             # О проекте
-│   ├── verify.html            # Подтверждение email
-│   └── admin/                 # Админ-панель
-│       ├── dashboard.html     # Главная админки
-│       ├── login.html         # Вход администратора
-│       ├── users.html         # Управление пользователями
-│       ├── logs.html          # Логи действий
-│       ├── news_list.html     # Новости (список)
-│       ├── news_form.html     # Новости (форма)
-│       ├── teams_list.html    # Команды (список)
-│       ├── teams_form.html    # Команды (форма)
-│       ├── tournaments_list.html      # Турниры (список)
-│       ├── tournaments_form.html      # Турниры (форма)
-│       └── tournament_participations.html # Заявки на турнир
-│
-├── static/                    # Статические файлы
-│   ├── style.css              # Основные стили
-│   ├── images/                # Изображения
-│   └── uploads/               # Загруженные файлы
-│
-├── alembic/                   # Миграции базы данных
-│   ├── versions/              # Файлы миграций
-│   └── env.py                 # Конфигурация Alembic
-│
-├── backups/                   # Резервные копии БД
-├── venv/                      # Виртуальное окружение Python
-├── .env                       # Переменные окружения
-├── alembic.ini                # Конфигурация Alembic
-└── requirements.txt           # Зависимости Python
+├── main.py                 # Точка входа приложения
+├── config.py               # Конфигурация и настройки
+├── models.py               # SQLAlchemy модели БД
+├── schemas.py              # Pydantic схемы для API
+├── auth.py                 # Маршруты аутентификации
+├── admin.py                # Админ-панель (пользователи)
+├── admin_teams.py          # Админ-панель (команды)
+├── admin_tournaments.py    # Админ-панель (турниры)
+├── api.py                  # REST API v1 endpoints
+├── news.py                 # Новости (админ + публичные)
+├── disciplines.py          # Дисциплины
+├── tournaments.py          # Турниры (публичные)
+├── profile.py              # Профиль пользователя
+├── mailer.py               # Email-рассылка
+├── utils.py                # Утилиты (хеширование, токены)
+├── create_admin.py         # Скрипт создания админа
+├── reset_admin_password.py # Скрипт сброса пароля админа
+├── backup_db.py            # Резервное копирование БД
+├── update_db.py            # Обновление БД
+├── seed_data.py            # Начальное наполнение БД
+├── test_api.py             # Тесты API
+├── test_site.py            # Тесты сайта
+├── pytest.ini              # Конфигурация pytest
+├── requirements.txt        # Зависимости Python
+├── alembic.ini             # Конфигурация Alembic
+├── alembic/                # Миграции БД
+│   └── versions/           # Файлы миграций
+├── templates/              # Jinja2 шаблоны
+│   ├── admin/              # Шаблоны админ-панели
+│   ├── index.html
+│   ├── login.html
+│   ├── register.html
+│   └── ...
+├── static/                 # Статические файлы
+│   ├── style.css
+│   ├── images/
+│   └── uploads/            # Загруженные файлы
+└── backups/                # Резервные копии БД
 ```
+
+---
 
 ## Установка и запуск
 
 ### Требования
 
-- Python 3.9+
+- Python 3.10 или выше
 - pip
 
 ### Установка зависимостей
 
 ```bash
 cd C:\Users\User\web_app
-python -m venv venv
+
+# Активация виртуального окружения (если существует)
 venv\Scripts\activate
+
+# Установка зависимостей
 pip install -r requirements.txt
 ```
 
-### Конфигурация
+### Настройка окружения
 
-Отредактируйте файл `.env` для настройки email-рассылки и других параметров:
+Отредактируйте файл `.env`:
 
 ```env
 # Email (Gmail)
@@ -116,7 +112,7 @@ MAIL_PORT=587
 
 # Приложение
 APP_URL=http://localhost:8000
-SECRET_KEY=e7b3c9f2a1d8e6b4c5a7f9d2e8b3c6a1f4d7e9b2c5a8f1d3e6b9c2a5f8d1e4b7
+SECRET_KEY=ваш_секретный_ключ
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
@@ -124,7 +120,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 DATABASE_URL=sqlite:///./app.db
 ```
 
-> **Для Gmail:** Включите 2FA и создайте пароль приложения: https://myaccount.google.com/apppasswords
+> **Важно**: Для работы email-рассылки через Gmail:
+> 1. Включите 2FA в аккаунте Google
+> 2. Создайте пароль приложения: https://myaccount.google.com/apppasswords
+> 3. Вставьте его в `MAIL_PASSWORD`
 
 ### Запуск сервера
 
@@ -133,263 +132,253 @@ DATABASE_URL=sqlite:///./app.db
 python main.py
 
 # Или через uvicorn
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Сервер будет доступен по адресу: **http://localhost:8000**
+Приложение будет доступно по адресу: **http://localhost:8000**
 
-### Миграции базы данных
+### Создание администратора
 
 ```bash
-# Применить все миграции
-alembic upgrade head
+python create_admin.py
+```
 
-# Создать новую миграцию после изменений в моделях
+Следуйте инструкциям для создания учётной записи администратора.
+
+---
+
+## База данных
+
+### Модели данных
+
+Основные модели (файл `models.py`):
+
+| Модель | Описание |
+|--------|----------|
+| `User` | Пользователи (email, username, роли, профиль) |
+| `News` | Новости платформы |
+| `Discipline` | Игровые дисциплины (Dota 2, CS2, Tanks) |
+| `Team` | Команды игроков |
+| `TeamMember` | Участники команд |
+| `Tournament` | Турниры |
+| `TournamentParticipation` | Участие команд в турнирах |
+| `Match` | Матчи турнирной сетки |
+| `AdminLog` | Лог действий администратора |
+| `PasswordResetToken` | Токены сброса пароля |
+
+### Миграции (Alembic)
+
+```bash
+# Создать новую миграцию
 alembic revision --autogenerate -m "Описание изменений"
 
-# Откатить последнюю миграцию
+# Применить миграции
+alembic upgrade head
+
+# Откатить миграцию
 alembic downgrade -1
 ```
 
-### Инициализация данных
+### Резервное копирование
 
 ```bash
-# Создание тестовых данных (команды, турниры)
-python seed_data.py
-
-# Полное тестирование (создание пользователя и админа)
-python test_site.py
+# Создать резервную копию
+python backup_db.py
 ```
 
-### Данные для входа (после test_site.py)
-
-| Роль | Email | Пароль | URL |
-|------|-------|--------|-----|
-| Пользователь | test@example.com | Test123! | /login |
-| Администратор | admin@easycyberpro.ru | Admin123! | /admin/login |
+---
 
 ## API Endpoints
 
 ### Health Check
-- `GET /health` — Проверка статуса сервиса
-- `GET /api/v1/health` — API версия (с номером версии)
+
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/health` | Проверка статуса сервиса |
+| GET | `/api/v1/health` | Проверка статуса API |
 
 ### Новости
-- `GET /api/v1/news` — Список новостей (пагинация: page, limit)
-- `GET /api/v1/news/{id}` — Детальная новость
+
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/api/v1/news` | Список новостей (пагинация) |
+| GET | `/api/v1/news/{id}` | Новость по ID |
 
 ### Дисциплины
-- `GET /api/v1/disciplines` — Все активные дисциплины
-- `GET /api/v1/disciplines/{slug}` — Дисциплина по slug (dota2, cs2, tanks)
+
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/api/v1/disciplines` | Список дисциплин |
+| GET | `/api/v1/disciplines/{slug}` | Дисциплина по slug |
 
 ### Команды
-- `GET /api/v1/teams` — Список команд (фильтр: discipline, пагинация)
-- `GET /api/v1/teams/{id}` — Детали команды
+
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/api/v1/teams` | Список команд |
+| GET | `/api/v1/teams/{id}` | Команда по ID |
 
 ### Турниры
-- `GET /api/v1/tournaments` — Список турниров (фильтры: status, discipline)
-- `GET /api/v1/tournaments/{id}` — Детали турнира
 
-## Модели данных
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/api/v1/tournaments` | Список турниров |
+| GET | `/api/v1/tournaments/{id}` | Турнир по ID |
 
-### User (Пользователь)
-- `id`, `email`, `username`, `hashed_password`
-- `is_active`, `is_verified`, `is_admin`
-- `verification_token`, `created_at`
+### Аутентификация
 
-### News (Новость)
-- `id`, `title`, `content`, `excerpt`, `image_url`
-- `author_id`, `is_published`, `created_at`, `updated_at`
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/register` | Страница регистрации |
+| POST | `/register` | Регистрация пользователя |
+| GET | `/login` | Страница входа |
+| POST | `/login` | Аутентификация |
+| GET | `/logout` | Выход |
+| GET | `/verify` | Подтверждение email |
+| GET | `/forgot-password` | Запрос сброса пароля |
+| POST | `/forgot-password` | Отправка токена сброса |
+| GET | `/reset-password` | Страница сброса пароля |
+| POST | `/reset-password` | Сброс пароля |
 
-### Discipline (Дисциплина)
-- `id`, `name`, `slug`, `description`, `icon`
-- `is_active`, `created_at`
+### Админ-панель
 
-### Team (Команда)
-- `id`, `name`, `discipline_id`, `captain_id`
-- `description`, `logo_url`, `wins`, `losses`, `rating`
-- `is_active`, `created_at`
-- **Property:** `win_rate` — процент побед (вычисляется)
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/admin` | Главная админ-панели |
+| GET | `/admin/login` | Вход администратора |
+| POST | `/admin/login` | Аутентификация админа |
+| GET | `/admin/logout` | Выход |
+| GET | `/admin/users` | Управление пользователями |
+| POST | `/admin/users/{id}/toggle-admin` | Изменить статус админа |
+| POST | `/admin/users/{id}/toggle-active` | Изменить активность |
+| POST | `/admin/users/{id}/delete` | Удалить пользователя |
+| GET | `/admin/logs` | Лог действий |
 
-### TeamMember (Участник команды)
-- `id`, `team_id`, `user_id`, `player_name`, `role`
-- `joined_at`
+---
 
-### Tournament (Турнир)
-- `id`, `name`, `discipline_id`, `description`
-- `prize_pool`, `max_teams`, `registration_deadline`
-- `start_date`, `end_date`, `status`, `format`
-- `is_online`, `image_url`, `created_at`, `updated_at`
-- **Property:** `registered_teams_count` — количество подтверждённых команд
+## Тестирование
 
-### TournamentParticipation (Заявка на турнир)
-- `id`, `tournament_id`, `team_id`, `user_id`
-- `is_confirmed`, `registered_at`
+### Запуск тестов
 
-### Match (Матч турнирной сетки)
-- `id`, `tournament_id`, `team1_id`, `team2_id`, `winner_id`
-- `team1_score`, `team2_score`
-- `round`, `match_order`, `status`
-- `scheduled_at`, `created_at`, `next_match_id`
+```bash
+# Все тесты
+pytest -v
 
-### AdminLog (Лог действий администратора)
-- `id`, `admin_id`, `action`, `target_type`, `target_id`
-- `details`, `ip_address`, `created_at`
+# Конкретный файл
+pytest test_api.py -v
 
-## Функциональные возможности
+# С покрытием
+pytest --cov=. -v
+```
 
-### Для пользователей
-- ✅ Регистрация и аутентификация (JWT в HttpOnly cookie)
-- ✅ Подтверждение email (токен)
-- ✅ Личный кабинет (dashboard)
-- ✅ Страница "Мои турниры" — отслеживание заявок
-- ✅ Просмотр новостей, турниров, дисциплин
-- ✅ Регистрация команды на турнир (с модальным окном подтверждения)
-- ✅ Автоматический расчёт винрейта команды
+### Структура тестов
 
-### Для администраторов
-- ✅ Админ-панель с навигацией по всем разделам
-- ✅ Управление пользователями (активация, права админа, удаление)
-- ✅ Управление новостями (CRUD)
-- ✅ Управление командами (CRUD, фильтр по дисциплинам)
-- ✅ Управление турнирами (CRUD, валидация дат)
-- ✅ Управление заявками на турниры (подтвердить/отказать с причиной)
-- ✅ Просмотр логов действий администраторов
-- ✅ CSRF-защита всех форм
-- ✅ Flash-сообщения об операциях
+- `test_api.py` — тесты REST API (health, новости, дисциплины, команды, турниры, аутентификация)
+- `test_site.py` — тесты веб-страниц
 
-### Email-уведомления
-- ✅ Подтверждение регистрации
-- ✅ Подача заявки на турнир
-- ✅ Подтверждение участия в турнире
-- ✅ Отказ в участии (с указанием причины)
+### Fixtures
 
-### Безопасность
-- ✅ Хеширование паролей (bcrypt)
-- ✅ JWT-аутентификация (HttpOnly cookie)
-- ✅ CSRF-токены для всех POST-запросов
-- ✅ Разделение прав (пользователь / админ)
-- ✅ Логирование действий администраторов
-- ✅ Валидация дат турниров
+Тесты используют тестовую SQLite БД (`test_app.db`), которая создаётся заново перед каждым тестом.
+
+---
+
+## Конфигурация
+
+### Основные настройки (config.py)
+
+| Параметр | По умолчанию | Описание |
+|----------|--------------|----------|
+| `database_url` | `sqlite:///./app.db` | Подключение к БД |
+| `secret_key` | авто-генерация | Ключ для JWT |
+| `algorithm` | `HS256` | Алгоритм шифрования |
+| `access_token_expire_minutes` | 30 | Время жизни токена |
+| `rate_limit_per_minute` | 10 | Лимит запросов в минуту |
+| `max_upload_size_mb` | 5 | Макс. размер загрузки |
+
+### Rate Limiting
+
+Приложение использует slowapi для ограничения запросов:
+- **10 запросов в минуту** (настраивается в `.env`)
+- **5 запросов в секунду** (burst)
+
+---
 
 ## Разработка
 
-### Структура роутеров
+### Добавление нового модуля
 
-| Роутер | Префикс | Описание |
-|--------|---------|----------|
-| `auth_router` | — | Регистрация, вход, выход, dashboard, мои турниры |
-| `admin_router` | /admin | Админ-панель (пользователи, логи) |
-| `teams_router` | /admin/teams | Управление командами |
-| `admin_tournaments_router` | /admin/tournaments | Управление турнирами и заявками |
-| `news_router` | /news | Новости |
-| `disciplines_router` | /discipline | Дисциплины |
-| `tournaments_router` | /tournament | Турниры (публичные страницы) |
-| `api_router` | /api/v1 | REST API |
+1. Создайте файл маршрута (например, `new_module.py`)
+2. Определите роутер:
+   ```python
+   from fastapi import APIRouter
+   router = APIRouter(prefix="/new-module", tags=["New Module"])
+   ```
+3. Добавьте маршруты
+4. Зарегистрируйте в `main.py`:
+   ```python
+   from new_module import router as new_module_router
+   app.include_router(new_module_router)
+   ```
 
-### CORS настройка
+### Стиль кода
 
-Разрешены запросы с:
-- `http://localhost:8000`
-- `http://127.0.0.1:8000`
+- **Именование**: snake_case для функций/переменных, PascalCase для классов
+- **Типизация**: используйте type hints
+- **Документация**: docstrings для функций и классов
+- **Логирование**: используйте `logging` модуль
 
-Credentials включены для поддержки cookie.
+### Логи
 
-### Шаблоны
+Логи выводятся в консоль и файл `server.log`. Уровень логирования настраивается в `.env`:
+```env
+LOG_LEVEL=INFO
+```
 
-Jinja2 настроен с отключенным кэшированием для разработки:
-- `auto_reload = True`
-- `cache_size = 0`
-- `ChoiceLoader` для гибкой загрузки шаблонов
+---
 
-### Оптимизация запросов
+## Безопасность
 
-Используется `joinedload` для избежания N+1 запросов:
-- Загрузка дисциплин с турнирами и командами
-- Загрузка турниров с дисциплинами и заявками
-- Загрузка заявок с командами и капитанами
+### Реализованные механизмы
 
-## Скрипты утилит
+- **JWT-аутентификация** с раздельными токенами для пользователей и админов
+- **Хеширование паролей** через bcrypt
+- **CSRF-защита** для форм
+- **Rate Limiting** для защиты от DDoS
+- **Валидация входных данных** через Pydantic
+- **Email-верификация** (авто-верификация в dev-режиме)
 
-| Скрипт | Описание |
-|--------|----------|
-| `test_site.py` | Полное тестирование: создание пользователя, админа, новости, турнира, команды |
-| `seed_data.py` | Наполнение БД тестовыми командами (15) и турнирами (4) |
-| `create_admin.py` | Создание администратора через CLI |
-| `reset_admin_password.py` | Сброс пароля администратора |
-| `backup_db.py` | Резервное копирование БД с timestamp |
+### Роли пользователей
 
-## Дисциплины (по умолчанию)
+| Роль | Описание |
+|------|----------|
+| `user` | Обычный пользователь |
+| `admin` | Администратор (полный доступ) |
+| `trainer` | Тренер |
+| `student`, `student_pro`, `student_ult` | Учебные роли |
 
-| Название | Slug | Иконка |
-|----------|------|--------|
-| Dota 2 | dota2 | ⚔️ |
-| Counter-Strike 2 | cs2 | 🔫 |
-| Мир Танков | tanks | 🛡️ |
+---
 
-## Форматы турниров
+## Полезные команды
 
-- `single_elimination` — Одиночная сетка плей-офф
-- `double_elimination` — Двойная сетка
-- `round_robin` — Круговая система
-- `swiss` — Швейцарская система
+```bash
+# Проверка зависимостей
+pip list --outdated
 
-## Статусы турниров
+# Обновление зависимостей
+pip install --upgrade -r requirements.txt
 
-- `upcoming` — Предстоящий
-- `registration` — Открыта регистрация
-- `active` — Активный
-- `completed` — Завершён
-- `cancelled` — Отменён
+# Очистка кэша Python
+find . -type d -name __pycache__ -exec rm -rf {} +
+find . -type f -name "*.pyc" -delete
 
-## Страницы проекта
+# Проверка БД
+python -c "from models import *; print('DB OK')"
+```
 
-### Публичные
-- `/` — Главная (новости, дисциплины, турниры)
-- `/news` — Все новости
-- `/news/{id}` — Детальная новость
-- `/tournaments` — Все турниры (с поиском, фильтрами, пагинацией, архивом)
-- `/tournament/{id}` — Детали турнира + регистрация
-- `/discipline/{slug}` — Страница дисциплины (команды, статистика)
-- `/about` — О проекте
+---
 
-### Авторизация
-- `/login` — Вход
-- `/register` — Регистрация
-- `/verify` — Подтверждение email
-- `/dashboard` — Личный кабинет
-- `/my-tournaments` — Мои турниры (заявки пользователя)
+## Контакты и поддержка
 
-### Админ-панель
-- `/admin` — Главная (статистика, последние пользователи)
-- `/admin/login` — Вход администратора
-- `/admin/news` — Новости (список)
-- `/admin/news/create` — Создать новость
-- `/admin/news/{id}/edit` — Редактировать новость
-- `/admin/teams` — Команды (список с фильтром)
-- `/admin/teams/create` — Создать команду
-- `/admin/teams/{id}/edit` — Редактировать команду
-- `/admin/tournaments` — Турниры (список с фильтрами)
-- `/admin/tournaments/create` — Создать турнир
-- `/admin/tournaments/{id}/edit` — Редактировать турнир
-- `/admin/tournaments/{id}/participations` — Заявки на турнир
-- `/admin/users` — Пользователи (с поиском)
-- `/admin/logs` — Логи действий
-
-## UX/UI особенности
-
-- 🎨 Тёмная тема с акцентными цветами (cyan, blue, purple)
-- 📱 Адаптивный дизайн
-- 🔔 Flash-сообщения об операциях
-- ⏳ Индикатор загрузки при отправке форм
-- 🗂️ Модальные окна подтверждения
-- 🎯 Цветовая индикация статусов (зелёный/жёлтый/красный)
-- 📊 Таблицы с сортировкой и пагинацией
-
-## Примечания
-
-- База данных SQLite хранится в `app.db`
-- Авто-верификация пользователей включена для локальной разработки
-- Email-рассылка опциональна (не критична для работы)
-- Резервные копии БД сохраняются в папку `backups/`
-- Миграции управляются через Alembic
+- **Email**: noreply@easycyberpro.ru
+- **Логирование ошибок**: `error.log`
+- **Лог сервера**: `server.log`

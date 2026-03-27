@@ -15,6 +15,9 @@ from datetime import timedelta
 from config import settings
 from jose import jwt, JWTError
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="templates")
@@ -150,23 +153,22 @@ async def admin_login(
     db: Session = Depends(get_db)
 ):
     """Вход администратора"""
-    print(f"LOGIN ATTEMPT: {email}")
-    
+    logger.info(f"Login attempt for: {email}")
+
     user = db.query(User).filter(User.email == email).first()
-    
+
     if not user:
-        print(f"User not found: {email}")
+        logger.warning(f"User not found: {email}")
         return templates.TemplateResponse("admin/login.html", {
             "request": request,
             "error": "Неверный email или пароль"
         })
-    
-    print(f"User found: {user.username}, is_admin: {user.is_admin}")
-    
+
+    logger.info(f"User found: {user.username}, is_admin: {user.is_admin}")
+
     pw_ok = verify_password(password, user.hashed_password)
-    print(f"Password check: {pw_ok}")
-    
     if not pw_ok:
+        logger.warning(f"Invalid password for: {email}")
         log_admin_action(db, user, "login_failed", details=f"Failed login for {email}", request=request)
         return templates.TemplateResponse("admin/login.html", {
             "request": request,
@@ -174,6 +176,7 @@ async def admin_login(
         })
 
     if not user.is_admin:
+        logger.warning(f"Non-admin login attempt: {email}")
         log_admin_action(db, user, "login_denied", details=f"Non-admin login attempt: {email}", request=request)
         return templates.TemplateResponse("admin/login.html", {
             "request": request,
@@ -188,11 +191,11 @@ async def admin_login(
 
     access_token = create_access_token(
         data={"sub": user.email, "type": "admin_access"},
-        expires_delta=timedelta(hours=8)
+        expires_delta=timedelta(hours=settings.admin_token_expire_hours)
     )
 
     log_admin_action(db, user, "login", request=request)
-    print(f"Login successful: {email}")
+    logger.info(f"Login successful: {email}")
 
     response = RedirectResponse("/admin", status_code=303)
     response.set_cookie(key="admin_access_token", value=f"Bearer {access_token}", httponly=True)
@@ -250,8 +253,11 @@ async def admin_users(
     query = db.query(User)
 
     if search:
+        # Экранируем спецсимволы для LIKE и используем параметризованный запрос
+        search_escaped = search.replace('%', r'\%').replace('_', r'\_')
+        search_pattern = f"%{search_escaped}%"
         query = query.filter(
-            (User.email.contains(search)) | (User.username.contains(search))
+            (User.email.ilike(search_pattern)) | (User.username.ilike(search_pattern))
         )
 
     total = query.count()

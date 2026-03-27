@@ -1,6 +1,9 @@
+import logging
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from config import settings
 from typing import List
+
+logger = logging.getLogger(__name__)
 
 
 def get_mail_config() -> ConnectionConfig:
@@ -136,6 +139,38 @@ async def send_tournament_rejection_email(
         {f"Причина: {reason}" if reason else "Администратор не указал причину отказа."}
 
         Вы можете подать заявку на другие турниры в любое время.
+
+        С уважением,
+        Команда EasyCyberPro
+        """,
+        subtype="plain"
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+
+
+async def send_password_reset_email(email: str, username: str, token: str):
+    """Отправка email для сброса пароля"""
+    conf = get_mail_config()
+    reset_link = f"{settings.app_url}/reset-password?token={token}"
+
+    message = MessageSchema(
+        subject="Сброс пароля - EasyCyberPro",
+        recipients=[email],
+        body=f"""
+        Здравствуйте, {username}!
+
+        Вы запросили сброс пароля для вашего аккаунта.
+
+        Для сброса пароля перейдите по ссылке:
+        {reset_link}
+
+        Или используйте этот код: {token}
+
+        Ссылка действительна 1 час.
+
+        Если вы не запрашивали сброс пароля, проигнорируйте это письмо.
 
         С уважением,
         Команда EasyCyberPro

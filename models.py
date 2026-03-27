@@ -16,12 +16,32 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=False)
-    is_verified = Column(Boolean, default=False)
-    is_admin = Column(Boolean, default=False)
-    role = Column(String(20), default="user")  # admin, trainer, student, student_pro, student_ult, user
-    verification_token = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=False, index=True)
+    is_verified = Column(Boolean, default=False, index=True)
+    is_admin = Column(Boolean, default=False, index=True)
+    role = Column(String(20), default="user", index=True)  # admin, trainer, student, student_pro, student_ult, user
+    verification_token = Column(String, nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    # Профиль пользователя
+    avatar_url = Column(String(500), nullable=True)
+    bio = Column(Text, nullable=True)  # Краткая информация о себе
+    date_of_birth = Column(DateTime, nullable=True)
+    country = Column(String(100), nullable=True)
+    city = Column(String(100), nullable=True)
+    social_vk = Column(String(200), nullable=True)
+    social_telegram = Column(String(100), nullable=True)
+    social_discord = Column(String(100), nullable=True)
+    
+    # Настройки
+    notify_email_tournaments = Column(Boolean, default=True)
+    notify_email_news = Column(Boolean, default=False)
+    is_profile_public = Column(Boolean, default=True)
+    
+    # Статистика
+    total_matches = Column(Integer, default=0)
+    total_wins = Column(Integer, default=0)
+    total_losses = Column(Integer, default=0)
 
     news_posts = relationship("News", back_populates="author", foreign_keys="News.author_id")
     teams = relationship("Team", back_populates="captain", foreign_keys="Team.captain_id")
@@ -36,14 +56,14 @@ class News(Base):
     __tablename__ = "news"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(200), nullable=False)
+    title = Column(String(200), nullable=False, index=True)
     content = Column(Text, nullable=False)
     excerpt = Column(String(500), nullable=True)
     image_url = Column(String(500), nullable=True)
-    author_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    is_published = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    author_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    is_published = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
 
     author = relationship("User", back_populates="news_posts")
 
@@ -56,11 +76,11 @@ class Discipline(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True)
-    slug = Column(String(50), nullable=False, unique=True)
+    slug = Column(String(50), nullable=False, unique=True, index=True)
     description = Column(Text, nullable=True)
     icon = Column(String(500), nullable=True)  # URL иконки/изображения
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     teams = relationship("Team", back_populates="discipline")
     tournaments = relationship("Tournament", back_populates="discipline")
@@ -73,16 +93,16 @@ class Team(Base):
     __tablename__ = "teams"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False)
-    captain_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    name = Column(String(100), nullable=False, index=True)
+    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False, index=True)
+    captain_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     description = Column(Text, nullable=True)
     logo_url = Column(String(500), nullable=True)
     wins = Column(Integer, default=0)
     losses = Column(Integer, default=0)
-    rating = Column(Float, default=0.0)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    rating = Column(Float, default=0.0, index=True)
+    is_active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     discipline = relationship("Discipline", back_populates="teams")
     captain = relationship("User", back_populates="teams")
@@ -104,11 +124,11 @@ class TeamMember(Base):
     __tablename__ = "team_members"
 
     id = Column(Integer, primary_key=True, index=True)
-    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     player_name = Column(String(100), nullable=True)
     role = Column(String(50), nullable=True)
-    joined_at = Column(DateTime, default=datetime.utcnow)
+    joined_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     team = relationship("Team", back_populates="members")
     user = relationship("User")
@@ -121,19 +141,19 @@ class Tournament(Base):
     __tablename__ = "tournaments"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(200), nullable=False)
-    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False)
+    name = Column(String(200), nullable=False, index=True)
+    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False, index=True)
     description = Column(Text, nullable=True)
     prize_pool = Column(String(100), nullable=True)
     max_teams = Column(Integer, default=16)
-    registration_deadline = Column(DateTime, nullable=True)
-    start_date = Column(DateTime, nullable=True)
+    registration_deadline = Column(DateTime, nullable=True, index=True)
+    start_date = Column(DateTime, nullable=True, index=True)
     end_date = Column(DateTime, nullable=True)
-    status = Column(String(20), default="upcoming")
+    status = Column(String(20), default="upcoming", index=True)
     format = Column(String(30), default="single_elimination")
     is_online = Column(Boolean, default=True)
     image_url = Column(String(500), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     discipline = relationship("Discipline", back_populates="tournaments")
@@ -152,11 +172,11 @@ class TournamentParticipation(Base):
     __tablename__ = "tournament_participations"
 
     id = Column(Integer, primary_key=True, index=True)
-    tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=False)
-    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    is_confirmed = Column(Boolean, default=False)
-    registered_at = Column(DateTime, default=datetime.utcnow)
+    tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    is_confirmed = Column(Boolean, default=False, index=True)
+    registered_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     tournament = relationship("Tournament", back_populates="participations")
     team = relationship("Team", back_populates="tournament_participations")
@@ -173,24 +193,24 @@ class Match(Base):
     __tablename__ = "matches"
 
     id = Column(Integer, primary_key=True, index=True)
-    tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=False)
-    team1_id = Column(Integer, ForeignKey("tournament_participations.id"), nullable=True)
-    team2_id = Column(Integer, ForeignKey("tournament_participations.id"), nullable=True)
-    winner_id = Column(Integer, ForeignKey("tournament_participations.id"), nullable=True)
+    tournament_id = Column(Integer, ForeignKey("tournaments.id"), nullable=False, index=True)
+    team1_id = Column(Integer, ForeignKey("tournament_participations.id"), nullable=True, index=True)
+    team2_id = Column(Integer, ForeignKey("tournament_participations.id"), nullable=True, index=True)
+    winner_id = Column(Integer, ForeignKey("tournament_participations.id"), nullable=True, index=True)
     next_match_id = Column(Integer, ForeignKey("matches.id"), nullable=True)
-    
+
     # Счёт
     team1_score = Column(Integer, default=0)
     team2_score = Column(Integer, default=0)
-    
+
     # Раунд (например, "1/8 финала", "Полуфинал", "Финал")
-    round = Column(String(50), nullable=True)
+    round = Column(String(50), nullable=True, index=True)
     # Порядок матча в раунде
     match_order = Column(Integer, default=0)
-    
-    status = Column(String(20), default="pending")  # pending, completed, cancelled
-    scheduled_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+
+    status = Column(String(20), default="pending", index=True)  # pending, completed, cancelled
+    scheduled_at = Column(DateTime, nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     tournament = relationship("Tournament", back_populates="matches")
     team1 = relationship("TournamentParticipation", foreign_keys=[team1_id], back_populates="matches_team1")
@@ -207,18 +227,35 @@ class AdminLog(Base):
     __tablename__ = "admin_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    admin_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    action = Column(String(50), nullable=False)
-    target_type = Column(String(50))
-    target_id = Column(Integer, nullable=True)
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    action = Column(String(50), nullable=False, index=True)
+    target_type = Column(String(50), index=True)
+    target_id = Column(Integer, nullable=True, index=True)
     details = Column(Text, nullable=True)
-    ip_address = Column(String(50), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    ip_address = Column(String(50), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     admin = relationship("User", back_populates="admin_logs")
 
     def __repr__(self):
         return f"<AdminLog(id={self.id}, action={self.action}, admin_id={self.admin_id})>"
+
+
+class PasswordResetToken(Base):
+    """Модель для токенов сброса пароля"""
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token = Column(String, nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False, index=True)
+
+    user = relationship("User", backref="reset_tokens")
+
+    def __repr__(self):
+        return f"<PasswordResetToken(id={self.id}, user_id={self.user_id})>"
 
 
 def get_db():

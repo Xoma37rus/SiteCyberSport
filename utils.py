@@ -1,3 +1,4 @@
+import logging
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
@@ -7,6 +8,8 @@ import secrets
 import base64
 import json
 import bcrypt
+
+logger = logging.getLogger(__name__)
 
 # Используем bcrypt напрямую для совместимости
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -37,6 +40,11 @@ def create_verification_token(email: str) -> str:
         data={"sub": email, "type": "verification"},
         expires_delta=timedelta(hours=24)
     )
+
+
+def create_reset_token() -> str:
+    """Генерация случайного токена для сброса пароля"""
+    return secrets.token_urlsafe(32)
 
 
 # ==================== CSRF Protection ====================

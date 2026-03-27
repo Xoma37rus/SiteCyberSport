@@ -17,28 +17,386 @@
             <a href="/" class="nav-link">Главная</a>
             <a href="/news" class="nav-link">Новости</a>
             <a href="/tournaments" class="nav-link">Турниры</a>
-            <a href="/my-tournaments" class="nav-link">Мои турниры</a>
+            <a href="/dashboard" class="nav-link active">Кабинет</a>
             <a href="/logout" class="btn-nav">Выйти</a>
         </div>
     </nav>
 
-    <div class="admin-login-container">
-        <div class="admin-login-header">
-            <h1>Личный кабинет</h1>
-            <p>Добро пожаловать в систему</p>
-        </div>
-        <div class="dashboard">
-            <p style="font-size: 18px; margin-bottom: 10px;">
-                👋 <strong style="color: var(--accent-cyan);">{{ user.username }}</strong>
-            </p>
-            <p style="color: var(--text-secondary); margin-bottom: 30px;">
-                Ваш email подтверждён. Вы можете участвовать в турнирах.
-            </p>
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="/news" class="btn btn-primary">Новости</a>
-                <a href="/logout" class="btn btn-secondary">Выйти</a>
+    <div class="dashboard-container">
+        <!-- Боковое меню -->
+        <aside class="dashboard-sidebar">
+            <div class="user-mini-profile">
+                {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar">
+                {% else %}
+                <div class="user-avatar-placeholder">{{ user.username[0].upper() }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <h3>{{ user.username }}</h3>
+                    <p class="user-role">{{ user.role | title }}</p>
+                </div>
             </div>
-        </div>
+            
+            <nav class="dashboard-nav">
+                <a href="/dashboard" class="dashboard-nav-item active">
+                    <span class="icon">📊</span> Обзор
+                </a>
+                <a href="/profile" class="dashboard-nav-item">
+                    <span class="icon">👤</span> Профиль
+                </a>
+                <a href="/my-teams" class="dashboard-nav-item">
+                    <span class="icon">👥</span> Мои команды
+                </a>
+                <a href="/my-tournaments" class="dashboard-nav-item">
+                    <span class="icon">🏆</span> Мои турниры
+                </a>
+                <a href="/settings" class="dashboard-nav-item">
+                    <span class="icon">⚙️</span> Настройки
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="dashboard-content">
+            <h1 class="dashboard-title">Обзор</h1>
+
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value">{{ stats.total_teams }}</div>
+                    <div class="stat-label">Команды</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value">{{ stats.total_tournaments }}</div>
+                    <div class="stat-label">Турниры</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚔️</div>
+                    <div class="stat-value">{{ stats.total_matches }}</div>
+                    <div class="stat-label">Матчи</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">{{ "%.1f"|format(stats.win_rate) }}%</div>
+                    <div class="stat-label">Винрейт</div>
+                </div>
+            </div>
+
+            <!-- Мои команды -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2>Мои команды</h2>
+                    <a href="/create-team" class="btn btn-primary btn-small">+ Создать</a>
+                </div>
+                
+                {% if teams %}
+                <div class="teams-list">
+                    {% for team in teams %}
+                    <div class="team-card">
+                        <div class="team-header">
+                            <h3>{{ team.name }}</h3>
+                            <span class="team-discipline">{{ team.discipline.name }}</span>
+                        </div>
+                        <div class="team-stats">
+                            <span class="team-rating">⭐ {{ "%.0f"|format(team.rating) }}</span>
+                            <span class="team-record">{{ team.wins }}/{{ team.losses }}</span>
+                            <span class="team-winrate">{{ "%.1f"|format(team.win_rate) }}%</span>
+                        </div>
+                        <a href="/my-teams" class="btn btn-secondary btn-small">Управление</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>У вас пока нет команд</p>
+                    <a href="/create-team" class="btn btn-primary">Создать первую команду</a>
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- Последние турниры -->
+            <section class="dashboard-section">
+                <div class="section-header">
+                    <h2>Последние турниры</h2>
+                    <a href="/my-tournaments" class="btn btn-secondary btn-small">Все турниры</a>
+                </div>
+                
+                {% if recent_participations %}
+                <div class="tournaments-list">
+                    {% for participation in recent_participations %}
+                    <div class="tournament-card">
+                        <div class="tournament-info">
+                            <h3>{{ participation.tournament.name }}</h3>
+                            <p class="tournament-team">Команда: {{ participation.team.name if participation.team else "N/A" }}</p>
+                            <p class="tournament-date">
+                                {% if participation.tournament.start_date %}
+                                {{ participation.tournament.start_date.strftime('%d.%m.%Y') }}
+                                {% else %}
+                                Дата не назначена
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="tournament-status">
+                            {% if participation.is_confirmed %}
+                            <span class="badge badge-success">✓ Подтверждено</span>
+                            {% else %}
+                            <span class="badge badge-warning">⏳ На рассмотрении</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>Вы ещё не участвуете в турнирах</p>
+                    <a href="/tournaments" class="btn btn-primary">Найти турнир</a>
+                </div>
+                {% endif %}
+            </section>
+        </main>
     </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+            text-transform: capitalize;
+        }
+        
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .dashboard-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .dashboard-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .dashboard-nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+        
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
+        .dashboard-title {
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .dashboard-section {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-header h2 {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 20px;
+        }
+        
+        .teams-list, .tournaments-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .team-card, .tournament-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .team-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .team-header h3 {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .team-discipline {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        
+        .team-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .team-rating {
+            color: var(--accent-cyan);
+        }
+        
+        .team-record, .team-winrate {
+            color: var(--text-secondary);
+        }
+        
+        .tournament-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+        
+        .tournament-team, .tournament-date {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0 0 5px 0;
+        }
+        
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+        
+        .badge-warning {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+    </style>
 </body>
 </html>

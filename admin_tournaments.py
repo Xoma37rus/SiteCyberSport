@@ -3,6 +3,7 @@
 CRUD операции для турниров и управление заявками команд
 """
 
+import logging
 from fastapi import APIRouter, Request, Depends, HTTPException, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -12,6 +13,8 @@ from utils import generate_csrf_token, validate_csrf_token, create_flash_message
 from admin import get_current_admin_user, require_admin, log_admin_action
 from datetime import datetime
 from mailer import send_tournament_confirmation_email, send_tournament_rejection_email
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin/tournaments", tags=["admin_tournaments"])
 templates = Jinja2Templates(directory="templates")

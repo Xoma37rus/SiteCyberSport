@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models import get_db, Discipline, Team, TeamMember
 
 router = APIRouter(tags=["disciplines"])
@@ -20,15 +20,17 @@ async def discipline_page(
     if not discipline:
         raise HTTPException(status_code=404, detail="Дисциплина не найдена")
 
-    teams = db.query(Team).filter(
+    # Исправление N+1: загружаем teams с members
+    teams = db.query(Team).options(
+        joinedload(Team.members)
+    ).filter(
         Team.discipline_id == discipline.id,
         Team.is_active == True
     ).order_by(Team.rating.desc()).all()
 
+    # Оптимизация: вычисляем статистику без дополнительных запросов
     total_matches = sum(t.wins + t.losses for t in teams)
-    total_players = db.query(TeamMember).filter(
-        TeamMember.team_id.in_([t.id for t in teams])
-    ).count() if teams else 0
+    total_players = sum(len(t.members) for t in teams) if teams else 0
 
     top_team = teams[0] if teams else None
 
