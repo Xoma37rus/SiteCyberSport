@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.username }} - Ученик</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Тренер</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/coach/dashboard" class="nav-link">Обзор</a>
+            <a href="/coach/students" class="nav-link" style="color: var(--accent-cyan);">Ученики</a>
+            <a href="/coach/sessions" class="nav-link">Тренировки</a>
+            <a href="/profile" class="nav-link">Профиль</a>
+            <a href="/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="user-mini-profile">
+                {% if coach.avatar_url %}
+                <img src="{{ coach.avatar_url }}" alt="{{ coach.username }}" class="user-avatar">
+                {% else %}
+                <div class="user-avatar-placeholder">{{ coach.username[0].upper() }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <h3>{{ coach.username }}</h3>
+                    <p class="user-role">🎯 Тренер</p>
+                </div>
+            </div>
+
+            <nav class="dashboard-nav">
+                <a href="/coach/dashboard" class="dashboard-nav-item">
+                    <span class="icon">📊</span> Обзор
+                </a>
+                <a href="/coach/students" class="dashboard-nav-item active">
+                    <span class="icon">👥</span> Ученики
+                </a>
+                <a href="/coach/sessions" class="dashboard-nav-item">
+                    <span class="icon">📅</span> Тренировки
+                </a>
+                <a href="/coach/sessions/create" class="dashboard-nav-item">
+                    <span class="icon">➕</span> Создать тренировку
+                </a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <div class="student-profile-header">
+                <div class="student-avatar-large">
+                    {% if student.avatar_url %}
+                    <img src="{{ student.avatar_url }}" alt="{{ student.username }}">
+                    {% else %}
+                    <div class="avatar-placeholder-large">{{ student.username[0].upper() }}</div>
+                    {% endif %}
+                </div>
+                <div class="student-info-block">
+                    <h1>{{ student.username }}</h1>
+                    <p class="student-email">{{ student.email }}</p>
+                    <div class="student-meta">
+                        <span class="badge badge-role">{{ student.role | title }}</span>
+                        {% if student.city %}
+                        <span class="badge badge-location">📍 {{ student.city }}{% if student.country %}, {{ student.country }}{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="student-content-grid">
+                <div class="student-section">
+                    <h2>📝 Заметки тренера</h2>
+                    <form method="POST" action="/coach/students/{{ student.id }}/update-notes">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <textarea name="notes" rows="6" placeholder="Добавьте заметки об ученике...">{{ notes or '' }}</textarea>
+                        <button type="submit" class="btn btn-primary btn-sm">Сохранить заметки</button>
+                    </form>
+                </div>
+
+                <div class="student-section">
+                    <h2>📊 Информация</h2>
+                    <div class="info-list">
+                        {% if student.date_of_birth %}
+                        <div class="info-item">
+                            <span class="info-label">Дата рождения:</span>
+                            <span class="info-value">{{ student.date_of_birth.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        {% endif %}
+                        {% if student.bio %}
+                        <div class="info-item">
+                            <span class="info-label">О себе:</span>
+                            <span class="info-value">{{ student.bio }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <span class="info-label">Статистика:</span>
+                            <span class="info-value">
+                                🎮 {{ student.total_matches }} игр | 
+                                ✅ {{ student.total_wins }} побед | 
+                                ❌ {{ student.total_losses }} поражений
+                            </span>
+                        </div>
+                        {% if student.social_vk %}
+                        <div class="info-item">
+                            <span class="info-label">VK:</span>
+                            <a href="{{ student.social_vk }}" target="_blank" class="social-link">{{ student.social_vk }}</a>
+                        </div>
+                        {% endif %}
+                        {% if student.social_telegram %}
+                        <div class="info-item">
+                            <span class="info-label">Telegram:</span>
+                            <span class="social-link">{{ student.social_telegram }}</span>
+                        </div>
+                        {% endif %}
+                        {% if student.social_discord %}
+                        <div class="info-item">
+                            <span class="info-label">Discord:</span>
+                            <span class="social-link">{{ student.social_discord }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="student-section full-width">
+                    <h2>📅 История тренировок</h2>
+                    {% if sessions %}
+                    <div class="sessions-table-container">
+                        <table class="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Название</th>
+                                    <th>Дисциплина</th>
+                                    <th>Длительность</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in sessions %}
+                                <tr>
+                                    <td>
+                                        {% if session.scheduled_at %}
+                                        {{ session.scheduled_at.strftime('%d.%m.%Y %H:%M') }}
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ session.title }}</td>
+                                    <td>
+                                        {% if session.discipline %}
+                                        {{ session.discipline.name }}
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ session.duration_minutes }} мин</td>
+                                    <td>
+                                        {% if session.status == 'completed' %}
+                                        <span class="badge badge-success">✅ Завершена</span>
+                                        {% elif session.status == 'scheduled' %}
+                                        <span class="badge badge-info">📅 Запланирована</span>
+                                        {% elif session.status == 'cancelled' %}
+                                        <span class="badge badge-danger">❌ Отменена</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="empty-text">Тренировок пока не было</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="/coach/students" class="btn btn-secondary">← Назад к списку</a>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .dashboard-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .dashboard-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .dashboard-nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .student-profile-header {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            padding: 25px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .student-avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .student-avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder-large {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .student-info-block h1 {
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+            font-size: 28px;
+        }
+
+        .student-email {
+            color: var(--text-secondary);
+            margin: 0 0 15px 0;
+            font-size: 14px;
+        }
+
+        .student-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .badge-role {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        .badge-location {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .badge-success {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
+
+        .badge-info {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        .badge-danger {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+        }
+
+        .student-content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .student-section {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .student-section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .student-section h2 {
+            color: var(--text-primary);
+            margin: 0 0 20px 0;
+            font-size: 18px;
+        }
+
+        .student-section textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .student-section textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .social-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        .social-link:hover {
+            text-decoration: underline;
+        }
+
+        .sessions-table-container {
+            overflow-x: auto;
+        }
+
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .sessions-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 15px;
+            text-align: left;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sessions-table td {
+            padding: 12px 15px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sessions-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-text {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 30px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+    </style>
+</body>
+</html>

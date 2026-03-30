@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     mail_from_name: str = "EasyCyberPro"
     mail_tls: bool = True
     mail_ssl: bool = False
+    mail_starttls: bool = True
+    mail_ssl_tls: bool = False
+    validate_certs: bool = True
 
     # ==================== App ====================
     app_url: str = "http://localhost:8000"

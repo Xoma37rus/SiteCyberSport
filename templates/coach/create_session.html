@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать тренировку - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Тренер</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/coach/dashboard" class="nav-link">Обзор</a>
+            <a href="/coach/students" class="nav-link">Ученики</a>
+            <a href="/coach/sessions" class="nav-link" style="color: var(--accent-cyan);">Тренировки</a>
+            <a href="/profile" class="nav-link">Профиль</a>
+            <a href="/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="user-mini-profile">
+                {% if coach.avatar_url %}
+                <img src="{{ coach.avatar_url }}" alt="{{ coach.username }}" class="user-avatar">
+                {% else %}
+                <div class="user-avatar-placeholder">{{ coach.username[0].upper() }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <h3>{{ coach.username }}</h3>
+                    <p class="user-role">🎯 Тренер</p>
+                </div>
+            </div>
+
+            <nav class="dashboard-nav">
+                <a href="/coach/dashboard" class="dashboard-nav-item">
+                    <span class="icon">📊</span> Обзор
+                </a>
+                <a href="/coach/students" class="dashboard-nav-item">
+                    <span class="icon">👥</span> Ученики
+                </a>
+                <a href="/coach/sessions" class="dashboard-nav-item active">
+                    <span class="icon">📅</span> Тренировки
+                </a>
+                <a href="/coach/sessions/create" class="dashboard-nav-item">
+                    <span class="icon">➕</span> Создать тренировку
+                </a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <h1 class="dashboard-title">Создать тренировку</h1>
+
+            <div class="form-container">
+                <form method="POST" action="/coach/sessions/create">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                    <div class="form-group">
+                        <label for="title">Название тренировки *</label>
+                        <input type="text" id="title" name="title" required placeholder="Например: Индивидуальная тренировка по CS2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="discipline_id">Дисциплина</label>
+                        <select id="discipline_id" name="discipline_id">
+                            <option value="">-- Выберите дисциплину --</option>
+                            {% for discipline in disciplines %}
+                            <option value="{{ discipline.id }}">{{ discipline.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Описание</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Опишите план тренировки, цели и задачи..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scheduled_at">Дата и время *</label>
+                            <input type="datetime-local" id="scheduled_at" name="scheduled_at" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration_minutes">Длительность (мин) *</label>
+                            <input type="number" id="duration_minutes" name="duration_minutes" value="60" min="15" max="300" step="15">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ученики *</label>
+                        <p class="form-hint">Выберите учеников, которые приглашаются на тренировку</p>
+                        <div class="students-checkboxes">
+                            {% for student in students %}
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="student_ids" value="{{ student.id }}">
+                                <span>{{ student.username }}</span>
+                                {% if student.role != 'user' %}
+                                <span class="student-role-badge">{{ student.role | title }}</span>
+                                {% endif %}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Создать тренировку</button>
+                        <a href="/coach/sessions" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .dashboard-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .dashboard-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .dashboard-nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .dashboard-title {
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-container {
+            max-width: 700px;
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-hint {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .students-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-cyan);
+        }
+
+        .checkbox-item span {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .student-role-badge {
+            margin-left: auto;
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+    </style>
+</body>
+</html>

@@ -14,6 +14,9 @@ class UserResponse(BaseResponse):
     is_active: bool
     is_verified: bool
     created_at: datetime
+    disciplines: Optional[List["DisciplineResponse"]] = []
+    
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
 
 
 class NewsResponse(BaseResponse):

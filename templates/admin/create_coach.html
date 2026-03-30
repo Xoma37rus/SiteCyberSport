@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Создать тренера - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/coaches" class="nav-link" style="color: var(--accent-cyan);">Тренеры</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Создать нового тренера</h1>
+            <p>Заполните данные для создания учётной записи тренера</p>
+        </div>
+
+        {% if flash %}
+        <div class="flash-message flash-{{ flash.type }}">{{ flash.message }}</div>
+        {% endif %}
+
+        <form method="POST" action="/admin/coaches/create">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group">
+                <label for="username">Имя пользователя *</label>
+                <input type="text" id="username" name="username" required placeholder="Введите имя пользователя">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required placeholder="example@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль *</label>
+                <input type="password" id="password" name="password" required placeholder="Минимум 6 символов" minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label>Дополнительные статусы</label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is_active" name="is_active" value="true" checked>
+                    <label for="is_active">Активен</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is_verified" name="is_verified" value="true" checked>
+                    <label for="is_verified">Подтверждён</label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Создать тренера</button>
+                <a href="/admin/coaches" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+
+    <style>
+        .admin-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .admin-header {
+            margin-bottom: 30px;
+        }
+
+        .admin-header h1 {
+            color: var(--text-primary);
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+
+        .admin-header p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-cyan);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .flash-message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .flash-success {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
+        .flash-error {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+    </style>
+</body>
+</html>

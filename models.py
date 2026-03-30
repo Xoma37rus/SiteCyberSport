@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -7,6 +7,17 @@ from config import settings
 engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+# Таблица связи многие-ко-многим для пользователей и дисциплин
+user_disciplines = Table(
+    'user_disciplines',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('discipline_id', Integer, ForeignKey('disciplines.id'), primary_key=True),
+    Column('created_at', DateTime, default=datetime.utcnow),
+    Column('skill_level', String(20), default='beginner')  # beginner, intermediate, advanced, pro
+)
 
 
 class User(Base):
@@ -47,6 +58,9 @@ class User(Base):
     teams = relationship("Team", back_populates="captain", foreign_keys="Team.captain_id")
     participations = relationship("TournamentParticipation", back_populates="user")
     admin_logs = relationship("AdminLog", back_populates="admin")
+    # Связь с дисциплинами (многие-ко-многим)
+    disciplines = relationship("Discipline", secondary=user_disciplines, back_populates="users",
+                               lazy="selectin", cascade="all, delete")
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"
@@ -84,6 +98,7 @@ class Discipline(Base):
 
     teams = relationship("Team", back_populates="discipline")
     tournaments = relationship("Tournament", back_populates="discipline")
+    users = relationship("User", secondary=user_disciplines, back_populates="disciplines")
 
     def __repr__(self):
         return f"<Discipline(id={self.id}, name='{self.name}')>"
@@ -256,6 +271,63 @@ class PasswordResetToken(Base):
 
     def __repr__(self):
         return f"<PasswordResetToken(id={self.id}, user_id={self.user_id})>"
+
+
+class CoachStudent(Base):
+    """Модель связи тренер-ученик"""
+    __tablename__ = "coach_students"
+
+    id = Column(Integer, primary_key=True, index=True)
+    coach_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    notes = Column(Text, nullable=True)  # Заметки тренера об ученике
+
+    coach = relationship("User", foreign_keys=[coach_id], backref="coached_students")
+    student = relationship("User", foreign_keys=[student_id], backref="coaches")
+
+    def __repr__(self):
+        return f"<CoachStudent(coach_id={self.coach_id}, student_id={self.student_id})>"
+
+
+class TrainingSession(Base):
+    """Модель для тренировок тренера с учениками"""
+    __tablename__ = "training_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    coach_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    scheduled_at = Column(DateTime, nullable=True, index=True)
+    duration_minutes = Column(Integer, default=60)
+    status = Column(String(20), default="scheduled", index=True)  # scheduled, completed, cancelled
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    coach = relationship("User", foreign_keys=[coach_id], backref="training_sessions")
+    discipline = relationship("Discipline", backref="training_sessions")
+    attendees = relationship("TrainingAttendance", back_populates="session")
+
+    def __repr__(self):
+        return f"<TrainingSession(id={self.id}, title='{self.title}')>"
+
+
+class TrainingAttendance(Base):
+    """Посещаемость тренировок"""
+    __tablename__ = "training_attendance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("training_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    status = Column(String(20), default="pending", index=True)  # pending, attended, missed
+    notes = Column(Text, nullable=True)
+
+    session = relationship("TrainingSession", back_populates="attendees")
+    student = relationship("User")
+
+    def __repr__(self):
+        return f"<TrainingAttendance(session_id={self.session_id}, student_id={self.student_id})>"
 
 
 def get_db():

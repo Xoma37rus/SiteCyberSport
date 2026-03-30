@@ -31,7 +31,7 @@ body {
 }
 
 .nav-brand { display: flex; align-items: center; gap: 12px; }
-.nav-brand-logo { width: 55px; height: 55px; object-fit: contain; }
+.nav-brand-logo { width: 55px; height: 55px; object-fit: cover; border-radius: 50%; }
 .nav-brand a {
     color: var(--text-primary);
     text-decoration: none;
@@ -151,7 +151,8 @@ body {
     width: 180px;
     height: 180px;
     margin-bottom: 30px;
-    object-fit: contain;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 .hero h1 { font-size: 48px; margin-bottom: 20px; }

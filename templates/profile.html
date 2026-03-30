@@ -107,10 +107,37 @@
                             <label for="country">Страна</label>
                             <input type="text" id="country" name="country" value="{{ user.country or '' }}" placeholder="Россия">
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="city">Город</label>
                             <input type="text" id="city" name="city" value="{{ user.city or '' }}" placeholder="Москва">
+                        </div>
+                    </div>
+
+                    <h3 class="form-section-title">🎮 Дисциплины</h3>
+                    <div class="form-group">
+                        <label>Выберите ваши дисциплины</label>
+                        <p class="form-hint" style="margin-bottom: 15px;">Отметьте игры, в которые вы играете</p>
+                        <div class="disciplines-grid">
+                            {% for discipline in disciplines %}
+                            <label class="discipline-checkbox-item">
+                                <input type="checkbox" name="discipline_ids" value="{{ discipline.id }}" 
+                                    {% if discipline.id in user_discipline_ids %}checked{% endif %}>
+                                <div class="discipline-card">
+                                    {% if discipline.icon %}
+                                    <img src="{{ discipline.icon }}" alt="{{ discipline.name }}" class="discipline-icon">
+                                    {% else %}
+                                    <div class="discipline-icon-placeholder">🎯</div>
+                                    {% endif %}
+                                    <div class="discipline-info">
+                                        <span class="discipline-name">{{ discipline.name }}</span>
+                                        {% if discipline.id in user_discipline_ids %}
+                                        <span class="discipline-badge">✓ Выбрано</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
                         </div>
                     </div>
 
@@ -362,6 +389,83 @@
             background: rgba(248, 113, 113, 0.1);
             border: 1px solid #f87171;
             color: #f87171;
+        }
+
+        /* Стили для выбора дисциплин */
+        .disciplines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .discipline-checkbox-item {
+            cursor: pointer;
+        }
+
+        .discipline-checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+
+        .discipline-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .discipline-checkbox-item:hover .discipline-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-cyan);
+        }
+
+        .discipline-checkbox-item input[type="checkbox"]:checked + .discipline-card {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--accent-cyan);
+        }
+
+        .discipline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .discipline-icon-placeholder {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .discipline-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .discipline-name {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .discipline-badge {
+            color: var(--accent-cyan);
+            font-size: 12px;
+            font-weight: 500;
         }
     </style>
 

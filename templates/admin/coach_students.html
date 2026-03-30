@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Ученики тренера {{ coach.username }} - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/coaches" class="nav-link" style="color: var(--accent-cyan);">Тренеры</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    {% if flash %}
+    <div class="admin-container" style="margin-top: 20px;">
+        <div class="alert alert-{{ flash.type }}">{{ flash.message }}</div>
+    </div>
+    {% endif %}
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1>Ученики тренера {{ coach.username }}</h1>
+                <p class="admin-subtitle">Управление учениками тренера</p>
+            </div>
+            <a href="/admin/coaches" class="btn btn-secondary">← Назад к тренерам</a>
+        </div>
+
+        <!-- Форма добавления ученика -->
+        <div class="add-student-form">
+            <h3>Добавить ученика тренеру</h3>
+            <form method="POST" action="/admin/coaches/{{ coach.id }}/students/add">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="form-row">
+                    <select name="student_id" required>
+                        <option value="">-- Выберите пользователя --</option>
+                        {% for user in users %}
+                        {% if user.role in ['student', 'student_pro', 'student_ult', 'user'] %}
+                        <option value="{{ user.id }}">{{ user.username }} ({{ user.email }})</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="notes" placeholder="Заметки (необязательно)">
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+
+        {% if students %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Роль</th>
+                    <th>Дата добавления</th>
+                    <th>Заметки</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in students %}
+                <tr>
+                    <td>#{{ item.student.id }}</td>
+                    <td>{{ item.student.username }}</td>
+                    <td>{{ item.student.email }}</td>
+                    <td><span class="badge">{{ item.student.role | title }}</span></td>
+                    <td>{{ item.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td class="notes-cell">{{ item.notes or '—' }}</td>
+                    <td>
+                        <form method="POST" action="/admin/coaches/{{ coach.id }}/students/{{ item.student.id }}/remove" style="display:inline;" onsubmit="return confirm('Удалить ученика из списка тренера?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="admin-btn admin-btn-danger" title="Удалить">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>У этого тренера пока нет учеников</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .admin-header h1 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 28px;
+        }
+
+        .admin-subtitle {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .add-student-form {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .add-student-form h3 {
+            color: var(--text-primary);
+            margin: 0 0 15px 0;
+            font-size: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row select,
+        .form-row input {
+            padding: 10px 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-row select:focus,
+        .form-row input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .admin-table thead {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .admin-table th {
+            padding: 15px;
+            text-align: left;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table td {
+            padding: 15px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .notes-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        .admin-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .admin-btn-danger {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .admin-btn-danger:hover {
+            background: rgba(248, 113, 113, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
+        .alert-error {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+    </style>
+</body>
+</html>

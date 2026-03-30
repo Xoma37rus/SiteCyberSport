@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Тренеры - Админ-панель</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Admin</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/admin" class="nav-link">Панель</a>
+            <a href="/admin/news" class="nav-link">Новости</a>
+            <a href="/admin/teams" class="nav-link">Команды</a>
+            <a href="/admin/tournaments" class="nav-link">Турниры</a>
+            <a href="/admin/users" class="nav-link">Пользователи</a>
+            <a href="/admin/coaches" class="nav-link" style="color: var(--accent-cyan);">Тренеры</a>
+            <a href="/admin/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    {% if flash %}
+    <div class="admin-container" style="margin-top: 20px;">
+        <div class="alert alert-{{ flash.type }}">{{ flash.message }}</div>
+    </div>
+    {% endif %}
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Управление тренерами</h1>
+            <a href="/admin/coaches/create" class="btn btn-primary">+ Создать тренера</a>
+        </div>
+
+        {% if coaches %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Учеников</th>
+                    <th>Статус</th>
+                    <th>Дата создания</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in coaches %}
+                <tr>
+                    <td>#{{ item.coach.id }}</td>
+                    <td>{{ item.coach.username }}</td>
+                    <td>{{ item.coach.email }}</td>
+                    <td><span class="badge">{{ item.student_count }}</span></td>
+                    <td>
+                        {% if item.coach.is_active and item.coach.is_verified %}
+                        <span class="status-active">✅ Активен</span>
+                        {% else %}
+                        <span class="status-inactive">❌ Не активен</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.coach.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <a href="/admin/coaches/{{ item.coach.id }}/students" class="admin-btn admin-btn-secondary" title="Ученики">👥</a>
+                        <form method="POST" action="/admin/coaches/{{ item.coach.id }}/delete" style="display:inline;" onsubmit="return confirm('Удалить тренера?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="admin-btn admin-btn-danger" title="Удалить">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}" class="btn btn-sm">← Назад</a>
+            {% endif %}
+            <span class="pagination-info">Страница {{ page }} из {{ pages }}</span>
+            {% if page < pages %}
+            <a href="?page={{ page + 1 }}" class="btn btn-sm">Вперёд →</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <p>Тренеров пока нет</p>
+            <a href="/admin/coaches/create" class="btn btn-primary">Создать первого тренера</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .admin-header h1 {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .admin-table thead {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .admin-table th {
+            padding: 15px;
+            text-align: left;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table td {
+            padding: 15px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .admin-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .admin-btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .admin-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .admin-btn-danger {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .admin-btn-danger:hover {
+            background: rgba(248, 113, 113, 0.3);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            color: #34d399;
+        }
+
+        .status-inactive {
+            color: var(--text-secondary);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
+        .alert-error {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить ученика - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img class="nav-brand-logo" src="/static/images/logo.jpg" alt="Logo">
+            <a href="/">EasyCyberPro | Тренер</a>
+        </div>
+        <div class="nav-menu">
+            <a href="/coach/dashboard" class="nav-link">Обзор</a>
+            <a href="/coach/students" class="nav-link" style="color: var(--accent-cyan);">Ученики</a>
+            <a href="/coach/sessions" class="nav-link">Тренировки</a>
+            <a href="/profile" class="nav-link">Профиль</a>
+            <a href="/logout" class="btn-nav">Выход</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="dashboard-sidebar">
+            <div class="user-mini-profile">
+                {% if coach.avatar_url %}
+                <img src="{{ coach.avatar_url }}" alt="{{ coach.username }}" class="user-avatar">
+                {% else %}
+                <div class="user-avatar-placeholder">{{ coach.username[0].upper() }}</div>
+                {% endif %}
+                <div class="user-info">
+                    <h3>{{ coach.username }}</h3>
+                    <p class="user-role">🎯 Тренер</p>
+                </div>
+            </div>
+
+            <nav class="dashboard-nav">
+                <a href="/coach/dashboard" class="dashboard-nav-item">
+                    <span class="icon">📊</span> Обзор
+                </a>
+                <a href="/coach/students" class="dashboard-nav-item active">
+                    <span class="icon">👥</span> Ученики
+                </a>
+                <a href="/coach/sessions" class="dashboard-nav-item">
+                    <span class="icon">📅</span> Тренировки
+                </a>
+                <a href="/coach/sessions/create" class="dashboard-nav-item">
+                    <span class="icon">➕</span> Создать тренировку
+                </a>
+            </nav>
+        </aside>
+
+        <main class="dashboard-content">
+            <h1 class="dashboard-title">Добавить ученика</h1>
+
+            <div class="form-container">
+                <form method="POST" action="/coach/students/add">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                    <div class="form-group">
+                        <label for="student_id">Выберите пользователя *</label>
+                        <select id="student_id" name="student_id" required>
+                            <option value="">-- Выберите пользователя --</option>
+                            {% for student in available_students %}
+                            {% if student.id not in existing_student_ids %}
+                            <option value="{{ student.id }}">
+                                {{ student.username }} ({{ student.email }})
+                            </option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <p class="form-hint">Показаны только пользователи, которые ещё не являются вашими учениками</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Заметки (необязательно)</label>
+                        <textarea id="notes" name="notes" rows="4" placeholder="Добавьте заметку об ученике (цели, уровень подготовки и т.д.)"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Добавить ученика</button>
+                        <a href="/coach/students" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .dashboard-sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            padding: 30px 20px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 {
+            color: var(--text-primary);
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .dashboard-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .dashboard-nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .dashboard-nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        .dashboard-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .dashboard-title {
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-container {
+            max-width: 600px;
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-hint {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+    </style>
+</body>
+</html>

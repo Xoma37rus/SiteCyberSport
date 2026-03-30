@@ -12,7 +12,7 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Form, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
-from models import get_db, User, Team, Discipline, TournamentParticipation, Tournament
+from models import get_db, User, Team, Discipline, TournamentParticipation, Tournament, user_disciplines
 from auth import get_current_user_from_cookie
 from utils import get_password_hash, verify_password, generate_csrf_token, validate_csrf_token, create_flash_message
 from config import settings
@@ -73,10 +73,19 @@ async def profile_page(request: Request, db: Session = Depends(get_db)):
             return RedirectResponse(url=str(request.url_for('login_page')), status_code=303)
 
         logger.info(f"Profile page for user: {user.username}")
+        
+        # Получаем все дисциплины
+        disciplines = db.query(Discipline).filter(Discipline.is_active == True).all()
+        
+        # Получаем выбранные дисциплины пользователя
+        user_discipline_ids = [d.id for d in user.disciplines]
+        
         csrf_token = generate_csrf_token()
         return templates.TemplateResponse("profile.html", {
             "request": request,
             "user": user,
+            "disciplines": disciplines,
+            "user_discipline_ids": user_discipline_ids,
             "csrf_token": csrf_token
         })
     except Exception as e:
@@ -94,6 +103,7 @@ async def update_profile(
     social_vk: str = Form(""),
     social_telegram: str = Form(""),
     social_discord: str = Form(""),
+    discipline_ids: str = Form(None),
     db: Session = Depends(get_db)
 ):
     """Обновление профиля пользователя"""
@@ -126,6 +136,22 @@ async def update_profile(
     user.social_vk = social_vk or None
     user.social_telegram = social_telegram or None
     user.social_discord = social_discord or None
+
+    # Обновление дисциплин
+    if discipline_ids:
+        # Преобразуем строку в список (FastAPI Form возвращает строку для list)
+        import re
+        ids = re.findall(r'\d+', discipline_ids) if discipline_ids else []
+        
+        if ids:
+            # Получаем дисциплины
+            selected_disciplines = db.query(Discipline).filter(
+                Discipline.id.in_([int(i) for i in ids]),
+                Discipline.is_active == True
+            ).all()
+            
+            # Очищаем текущие связи и добавляем новые
+            user.disciplines = selected_disciplines
 
     db.commit()
     logger.info(f"Profile updated for user {user.username}")

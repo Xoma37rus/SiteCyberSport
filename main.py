@@ -10,11 +10,13 @@ from auth import router as auth_router
 from admin import router as admin_router
 from admin_teams import router as teams_router
 from admin_tournaments import router as admin_tournaments_router
+from admin_coaches import router as admin_coaches_router
 from news import router as news_router, public_router as public_news_router
 from disciplines import router as disciplines_router
 from tournaments import router as tournaments_router
 from api import router as api_router
 from profile import router as profile_router
+from coach import router as coach_router
 from config import settings
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -67,12 +69,14 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(teams_router)
 app.include_router(admin_tournaments_router)
+app.include_router(admin_coaches_router)
 app.include_router(news_router)
 app.include_router(public_news_router)
 app.include_router(disciplines_router)
 app.include_router(tournaments_router)
 app.include_router(api_router)
 app.include_router(profile_router)
+app.include_router(coach_router)
 
 try:
     create_tables()

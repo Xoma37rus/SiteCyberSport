@@ -14,10 +14,10 @@ def get_mail_config() -> ConnectionConfig:
         MAIL_PORT=settings.mail_port,
         MAIL_SERVER=settings.mail_server,
         MAIL_FROM_NAME=settings.mail_from_name,
-        MAIL_TLS=settings.mail_tls,
-        MAIL_SSL=settings.mail_ssl,
+        MAIL_STARTTLS=settings.mail_starttls,
+        MAIL_SSL_TLS=settings.mail_ssl_tls,
         USE_CREDENTIALS=True,
-        VALIDATE_CERTS=True,
+        VALIDATE_CERTS=settings.validate_certs,
     )
 
 

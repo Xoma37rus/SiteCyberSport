@@ -29,6 +29,11 @@
                 <a href="/dashboard" class="dashboard-nav-item active">
                     <span class="icon">📊</span> Обзор
                 </a>
+                {% if user.role == 'trainer' %}
+                <a href="/coach/dashboard" class="dashboard-nav-item">
+                    <span class="icon">🎯</span> Кабинет тренера
+                </a>
+                {% endif %}
                 <a href="/profile" class="dashboard-nav-item">
                     <span class="icon">👤</span> Профиль
                 </a>
