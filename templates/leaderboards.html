@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рейтинги игроков | EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="container" style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+        <!-- Заголовок -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 36px; margin-bottom: 10px;">
+                🏆 Рейтинги игроков
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 18px;">
+                Лучшие игроки по дисциплинам
+            </p>
+        </div>
+
+        <!-- Карточки дисциплин с топ игроками -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-bottom: 40px;">
+            {% for data in leaderboard_data %}
+            <div class="discipline-leaderboard-card" style="
+                background: var(--bg-card);
+                border-radius: 16px;
+                padding: 24px;
+                border: 1px solid var(--border-color);
+                transition: transform 0.2s, border-color 0.2s;
+            "
+            onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='var(--accent-cyan)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)'">
+                
+                <!-- Заголовок дисциплины -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    {% if data.discipline.icon %}
+                    <img src="{{ data.discipline.icon }}" alt="{{ data.discipline.name }}" style="width: 40px; height: 40px; object-fit: contain;">
+                    {% else %}
+                    <div style="font-size: 32px;">🎮</div>
+                    {% endif %}
+                    <div>
+                        <h3 style="color: var(--text-primary); margin: 0;">{{ data.discipline.name }}</h3>
+                        <p style="color: var(--text-secondary); font-size: 13px; margin: 0;">
+                            {{ data.total_players }} игроков в рейтинге
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Топ 3 игрока -->
+                <div style="margin-bottom: 20px;">
+                    {% for player in data.top_players %}
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 12px;
+                        margin-bottom: 8px;
+                        background: var(--bg-secondary);
+                        border-radius: 8px;
+                        {% if loop.index == 1 %}border-left: 3px solid #fbbf24;{% endif %}
+                        {% if loop.index == 2 %}border-left: 3px solid #94a3b8;{% endif %}
+                        {% if loop.index == 3 %}border-left: 3px solid #b45309;{% endif %}
+                    ">
+                        <!-- Ранг -->
+                        <div style="
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 700;
+                            font-size: 14px;
+                            {% if loop.index == 1 %}background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000;{% endif %}
+                            {% if loop.index == 2 %}background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff;{% endif %}
+                            {% if loop.index == 3 %}background: linear-gradient(135deg, #b45309, #92400e); color: #fff;{% endif %}
+                            {% if loop.index > 3 %}background: var(--bg-card); color: var(--text-secondary);{% endif %}
+                        ">
+                            {{ loop.index }}
+                        </div>
+
+                        <!-- Аватар и имя -->
+                        <div style="flex: 1; display: flex; align-items: center; gap: 12px;">
+                            {% if player.user.avatar_url %}
+                            <img src="{{ player.user.avatar_url }}" alt="{{ player.user.username }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                            <div style="
+                                width: 40px;
+                                height: 40px;
+                                border-radius: 50%;
+                                background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: 700;
+                                color: var(--bg-primary);
+                            ">
+                                {{ player.user.username[0]|upper }}
+                            </div>
+                            {% endif %}
+                            
+                            <div style="flex: 1;">
+                                <a href="/profile/{{ player.user.id }}" style="
+                                    color: var(--text-primary);
+                                    text-decoration: none;
+                                    font-weight: 600;
+                                    font-size: 14px;
+                                ">
+                                    {{ player.user.username }}
+                                </a>
+                                <div style="font-size: 12px; color: var(--text-secondary);">
+                                    {{ player.wins }} побед / {{ player.losses }} поражений
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ELO и уровень -->
+                        <div style="text-align: right;">
+                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-cyan);">
+                                {{ player.elo }}
+                            </div>
+                            <span class="level-badge level-{{ player.level }}" style="font-size: 11px; padding: 2px 6px;">
+                                Lvl {{ player.level }}
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                        <p>🎮 Пока нет игроков в рейтинге</p>
+                        <p style="font-size: 13px; margin-top: 8px;">Станьте первым!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Кнопка просмотра полной таблицы -->
+                <a href="/leaderboard?discipline={{ data.discipline.slug }}" style="
+                    display: block;
+                    text-align: center;
+                    padding: 12px;
+                    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+                    color: var(--bg-primary);
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    transition: opacity 0.2s;
+                "
+                onmouseover="this.style.opacity='0.9'"
+                onmouseout="this.style.opacity='1'">
+                    📊 Полная таблица лидеров →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if leaderboard_data|length == 0 %}
+        <div style="
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        ">
+            <p style="font-size: 18px; margin-bottom: 10px;">🎮 Рейтинги пока не доступны</p>
+            <p>Как только игроки начнут участвовать в турнирах, здесь появится рейтинг</p>
+        </div>
+        {% endif %}
+
+        <!-- Информация о системе рейтинга -->
+        <div style="
+            margin-top: 40px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+        ">
+            <h3 style="color: var(--text-primary); margin-bottom: 16px;">📊 Как работает система рейтинга?</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🎯</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 8px;">Стартовый рейтинг</h4>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                        Все игроки начинают с 1000 ELO (Level 6). Это даёт возможность показать свой истинный уровень.
+                    </p>
+                </div>
+                <div style="padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">⚔️</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 8px;">Матчи влияют на рейтинг</h4>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                        Победа над сильным соперником даёт больше ELO, поражение от слабого отнимает меньше.
+                    </p>
+                </div>
+                <div style="padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📈</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 8px;">10 уровней мастерства</h4>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                        От Level 1 (0-199 ELO) до Level 10 (2000+ ELO). Достигните вершины!
+                    </p>
+                </div>
+                <div style="padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🏆</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 8px;">Участвуйте в турнирах</h4>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                        Играйте в официальных турнирах для получения и изменения рейтинга.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица уровней -->
+        <div style="
+            margin-top: 30px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+        ">
+            <h3 style="color: var(--text-primary); margin-bottom: 20px;">🎖️ Уровни мастерства</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+                <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                    <div style="color: #6b7280; font-weight: 700; font-size: 18px;">Level 1</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">0-199 ELO</div>
+                </div>
+                <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                    <div style="color: #6b7280; font-weight: 700; font-size: 18px;">Level 2</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">200-399 ELO</div>
+                </div>
+                <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                    <div style="color: #6b7280; font-weight: 700; font-size: 18px;">Level 3</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">400-599 ELO</div>
+                </div>
+                <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                    <div style="color: #6b7280; font-weight: 700; font-size: 18px;">Level 4</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">600-799 ELO</div>
+                </div>
+                <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                    <div style="color: #6b7280; font-weight: 700; font-size: 18px;">Level 5</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">800-999 ELO</div>
+                </div>
+                <div style="padding: 12px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); border-radius: 8px; text-align: center;">
+                    <div style="color: #3b82f6; font-weight: 700; font-size: 18px;">Level 6</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">1000-1199 ELO</div>
+                </div>
+                <div style="padding: 12px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); border-radius: 8px; text-align: center;">
+                    <div style="color: #3b82f6; font-weight: 700; font-size: 18px;">Level 7</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">1200-1399 ELO</div>
+                </div>
+                <div style="padding: 12px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border-radius: 8px; text-align: center;">
+                    <div style="color: #fbbf24; font-weight: 700; font-size: 18px;">Level 8</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">1400-1699 ELO</div>
+                </div>
+                <div style="padding: 12px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border-radius: 8px; text-align: center;">
+                    <div style="color: #fbbf24; font-weight: 700; font-size: 18px;">Level 9</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">1700-1999 ELO</div>
+                </div>
+                <div style="padding: 12px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(239, 68, 68, 0.2)); border-radius: 8px; text-align: center; border: 2px solid rgba(251, 191, 36, 0.3);">
+                    <div style="color: #fbbf24; font-weight: 700; font-size: 18px;">Level 10</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">2000+ ELO</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

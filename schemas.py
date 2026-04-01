@@ -135,3 +135,108 @@ class Token(BaseModel):
 
 class VerifyEmail(BaseModel):
     token: str
+
+
+# ==================== СИСТЕМА РЕЙТИНГА ELO ====================
+
+class PlayerRatingResponse(BaseResponse):
+    """Ответ с рейтингом игрока"""
+    id: int
+    user_id: int
+    discipline_id: int
+    elo: int
+    level: int
+    games_played: int
+    wins: int
+    losses: int
+    draws: int
+    peak_elo: int
+    last_game_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    win_rate: float
+    progress_to_next_level: float
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RatingChangeResponse(BaseResponse):
+    """Ответ с историей изменения рейтинга"""
+    id: int
+    user_id: int
+    discipline_id: int
+    match_id: Optional[int] = None
+    elo_before: int
+    elo_after: int
+    elo_change: int
+    reason: str
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LeaderboardItem(BaseModel):
+    """Элемент таблицы лидеров"""
+    rank: int
+    user_id: int
+    username: str
+    avatar_url: Optional[str] = None
+    elo: int
+    level: int
+    games_played: int
+    wins: int
+    losses: int
+    win_rate: float
+    peak_elo: int
+
+
+class LeaderboardResponse(BaseModel):
+    """Ответ таблицы лидеров"""
+    discipline: str
+    discipline_name: str
+    items: List[LeaderboardItem]
+    total: int
+    limit: int
+
+
+class RatingHistoryResponse(BaseModel):
+    """Ответ с историей рейтинга"""
+    user_id: int
+    discipline: str
+    items: List[RatingChangeResponse]
+    total: int
+
+
+class UserRatingSummary(BaseModel):
+    """Краткая информация о рейтинге пользователя"""
+    discipline_id: int
+    discipline_name: str
+    discipline_slug: str
+    discipline_icon: Optional[str] = None
+    elo: int
+    level: int
+    games_played: int
+    wins: int
+    losses: int
+    win_rate: float
+    progress_to_next_level: float
+
+
+class UserRatingsResponse(BaseModel):
+    """Ответ со всеми рейтингами пользователя"""
+    user_id: int
+    username: str
+    ratings: List[UserRatingSummary]
+    total_ratings: int
+
+
+# ==================== МАТЧМЕЙКИНГ ====================
+
+class MatchmakingQueueResponse(BaseModel):
+    """Ответ со статусом очереди матчмейкинга"""
+    status: str  # waiting, found, cancelled, timeout
+    game_type: str
+    elo: int
+    queued_at: datetime
+    wait_time: int  # секунды
+    estimated_time: Optional[int] = None  # предполагаемое время ожидания

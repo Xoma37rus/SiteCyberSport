@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float, Table
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float, Table, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -328,6 +328,125 @@ class TrainingAttendance(Base):
 
     def __repr__(self):
         return f"<TrainingAttendance(session_id={self.session_id}, student_id={self.student_id})>"
+
+
+# ==================== СИСТЕМА РЕЙТИНГА ELO ====================
+
+class PlayerRating(Base):
+    """Рейтинг игрока по дисциплинам (аналог FACEIT Levels 1-10)"""
+    __tablename__ = "player_ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False, index=True)
+
+    # Рейтинг
+    elo = Column(Integer, default=1000, index=True)  # Стартовый ELO
+    level = Column(Integer, default=1, index=True)   # Уровень 1-10
+    games_played = Column(Integer, default=0)
+    wins = Column(Integer, default=0)
+    losses = Column(Integer, default=0)
+    draws = Column(Integer, default=0)
+
+    # Прогресс
+    peak_elo = Column(Integer, default=1000)
+    last_game_at = Column(DateTime, nullable=True)
+
+    # Мета
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    user = relationship("User", back_populates="ratings", lazy="joined")
+    discipline = relationship("Discipline", back_populates="ratings", lazy="joined")
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'discipline_id', name='uq_user_discipline_rating'),
+    )
+
+    @property
+    def win_rate(self) -> float:
+        """Процент побед"""
+        if self.games_played == 0:
+            return 0.0
+        return (self.wins / self.games_played) * 100
+
+    @property
+    def progress_to_next_level(self) -> float:
+        """Прогресс до следующего уровня (0-100%)"""
+        # Каждый уровень = 200 ELO
+        elo_in_level = self.elo % 200
+        return (elo_in_level / 200) * 100
+
+    def __repr__(self):
+        return f"<PlayerRating(user_id={self.user_id}, discipline_id={self.discipline_id}, elo={self.elo}, level={self.level})>"
+
+
+class RatingChange(Base):
+    """История изменений рейтинга игрока"""
+    __tablename__ = "rating_changes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False, index=True)
+    match_id = Column(Integer, ForeignKey("matches.id"), nullable=True, index=True)
+
+    elo_before = Column(Integer, nullable=False)
+    elo_after = Column(Integer, nullable=False)
+    elo_change = Column(Integer, nullable=False)  # +32, -15, etc.
+
+    reason = Column(String(50), default="match")  # win, loss, draw, penalty, bonus
+
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    user = relationship("User", back_populates="rating_changes")
+    discipline = relationship("Discipline", back_populates="rating_changes")
+    match = relationship("Match", back_populates="rating_changes")
+
+    def __repr__(self):
+        return f"<RatingChange(user_id={self.user_id}, elo_change={self.elo_change})>"
+
+
+class MatchmakingQueue(Base):
+    """Очередь матчмейкинга для автоматического подбора игр"""
+    __tablename__ = "matchmaking_queue"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    discipline_id = Column(Integer, ForeignKey("disciplines.id"), nullable=False, index=True)
+
+    # Параметры поиска
+    game_type = Column(String(20), default="1v1")  # 1v1, 2v2, 5v5
+    elo = Column(Integer, nullable=False)
+    elo_min = Column(Integer, nullable=True)  # Минимальный ELO для поиска
+    elo_max = Column(Integer, nullable=True)  # Максимальный ELO для поиска
+
+    # Статус
+    status = Column(String(20), default="waiting", index=True)  # waiting, found, cancelled, timeout
+    queued_at = Column(DateTime, default=datetime.utcnow, index=True)
+    found_at = Column(DateTime, nullable=True)
+
+    # Ссылка на созданный матч
+    match_id = Column(Integer, ForeignKey("matches.id"), nullable=True)
+
+    user = relationship("User", back_populates="mm_queues")
+    discipline = relationship("Discipline", back_populates="mm_queues")
+    match = relationship("Match", back_populates="mm_queue")
+
+    def __repr__(self):
+        return f"<MatchmakingQueue(user_id={self.user_id}, game_type={self.game_type}, status={self.status})>"
+
+
+# Добавляем обратные связи в существующие модели
+User.ratings = relationship("PlayerRating", order_by=PlayerRating.elo.desc(), back_populates="user")
+User.rating_changes = relationship("RatingChange", order_by=RatingChange.created_at.desc(), back_populates="user")
+User.mm_queues = relationship("MatchmakingQueue", order_by=MatchmakingQueue.queued_at.desc(), back_populates="user")
+
+Discipline.ratings = relationship("PlayerRating", order_by=PlayerRating.elo.desc(), back_populates="discipline")
+Discipline.rating_changes = relationship("RatingChange", order_by=RatingChange.created_at.desc(), back_populates="discipline")
+Discipline.mm_queues = relationship("MatchmakingQueue", order_by=MatchmakingQueue.queued_at.desc(), back_populates="discipline")
+
+Match.rating_changes = relationship("RatingChange", order_by=RatingChange.created_at.desc(), back_populates="match")
+Match.mm_queue = relationship("MatchmakingQueue", back_populates="match")
 
 
 def get_db():

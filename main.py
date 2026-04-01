@@ -17,6 +17,7 @@ from tournaments import router as tournaments_router
 from api import router as api_router
 from profile import router as profile_router
 from coach import router as coach_router
+from leaderboard import router as leaderboard_router
 from config import settings
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -77,6 +78,7 @@ app.include_router(tournaments_router)
 app.include_router(api_router)
 app.include_router(profile_router)
 app.include_router(coach_router)
+app.include_router(leaderboard_router)
 
 try:
     create_tables()
