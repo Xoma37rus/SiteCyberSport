@@ -105,29 +105,45 @@ async def all_leaderboards_page(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Страница со всеми таблицами лидеров"""
+    """Страница со всеми таблицами лидеров — только ученики"""
     current_user = get_current_user_from_cookie(request, db)
-    
+
     # Получаем все дисциплины
     disciplines = db.query(Discipline).filter(Discipline.is_active == True).all()
-    
-    # Получаем топ игроков для каждой дисциплины
+
+    # Получаем топ-3 учеников для каждой дисциплины
     leaderboard_data = []
     for disc in disciplines:
-        top_players = db.query(PlayerRating).options(
+        top_students = db.query(PlayerRating).join(
+            User, PlayerRating.user_id == User.id
+        ).join(
+            user_disciplines, User.id == user_disciplines.c.user_id
+        ).options(
             joinedload(PlayerRating.user)
         ).filter(
-            PlayerRating.discipline_id == disc.id
+            PlayerRating.discipline_id == disc.id,
+            user_disciplines.c.discipline_id == disc.id,
+            User.is_active == True,
+            User.role.like('student%')  # Только ученики
         ).order_by(PlayerRating.elo.desc()).limit(3).all()
-        
+
+        total_students = db.query(PlayerRating).join(
+            User, PlayerRating.user_id == User.id
+        ).join(
+            user_disciplines, User.id == user_disciplines.c.user_id
+        ).filter(
+            PlayerRating.discipline_id == disc.id,
+            user_disciplines.c.discipline_id == disc.id,
+            User.is_active == True,
+            User.role.like('student%')
+        ).count()
+
         leaderboard_data.append({
             "discipline": disc,
-            "top_players": top_players,
-            "total_players": db.query(PlayerRating).filter(
-                PlayerRating.discipline_id == disc.id
-            ).count()
+            "top_players": top_students,
+            "total_players": total_students
         })
-    
+
     return templates.TemplateResponse("leaderboards.html", {
         "request": request,
         "current_user": current_user,
