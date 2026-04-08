@@ -65,6 +65,10 @@ class User(Base):
     disciplines = relationship("Discipline", secondary=user_disciplines, back_populates="users",
                                lazy="selectin", cascade="all, delete")
 
+    # Extended relationships (lazy loaded для избежания циклических импортов)
+    student_ratings = relationship("StudentRating", back_populates="student", foreign_keys="StudentRating.student_id", lazy="select")
+    coach_students = relationship("CoachStudent", back_populates="coach", foreign_keys="CoachStudent.coach_id", lazy="select")
+
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, username={self.username})>"
 
