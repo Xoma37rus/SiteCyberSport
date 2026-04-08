@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>{{ ladder.name }} - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="ladders-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <a href="/ladders/" style="color: var(--accent-cyan); text-decoration: none;">← Все ладдеры</a>
+            {% if is_participant %}
+            <span style="background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 6px 16px; border-radius: 20px; font-size: 14px;">Вы участник</span>
+            {% elif ladder.status in ['upcoming', 'active'] %}
+            <button class="btn btn-primary" onclick="joinLadder({{ ladder.id }})">Присоединиться</button>
+            {% endif %}
+        </div>
+
+        <div class="ladder-card">
+            <div class="ladder-header">
+                <h1 style="color: var(--text-primary); margin: 0;">{{ ladder.name }}</h1>
+                <span class="ladder-status {{ ladder.status }}">{{ ladder.status }}</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 13px;">Дисциплина</div>
+                    <div style="color: var(--text-primary); font-weight: 600;">{{ ladder.discipline.name if ladder.discipline else 'N/A' }}</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 13px;">Формат</div>
+                    <div style="color: var(--text-primary); font-weight: 600;">{{ ladder.game_type }}</div>
+                </div>
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 13px;">Участники</div>
+                    <div style="color: var(--text-primary); font-weight: 600;">{{ participants | length }}/{{ ladder.max_participants }}</div>
+                </div>
+                {% if ladder.prize_description %}
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 13px;">Приз</div>
+                    <div style="color: var(--accent-cyan); font-weight: 600;">{{ ladder.prize_description }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Таблица лидеров -->
+        <div class="ladder-card">
+            <h2 style="color: var(--text-primary); margin-bottom: 20px;">🏆 Таблица лидеров</h2>
+            {% if participants %}
+            <table class="ladder-standings">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Игрок</th>
+                        <th>Победы</th>
+                        <th>Поражения</th>
+                        <th>ELO</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in participants %}
+                    <tr>
+                        <td style="font-weight: 700; color: {% if p.current_position == 1 %}#fbbf24{% elif p.current_position == 2 %}#c0c0c0{% elif p.current_position == 3 %}#cd7f32{% else %}var(--text-secondary){% endif %};">
+                            {{ p.current_position }}
+                        </td>
+                        <td>
+                            <strong style="color: var(--text-primary);">{{ p.user.username if p.user else 'Unknown' }}</strong>
+                        </td>
+                        <td style="color: #34d399;">{{ p.wins }}</td>
+                        <td style="color: #f87171;">{{ p.losses }}</td>
+                        <td style="color: var(--accent-cyan); font-weight: 700;">{{ p.elo_at_start }}</td>
+                        <td>
+                            {% if current_user and is_participant and p.user_id != current_user.id %}
+                            <button class="ladder-challenge-btn" onclick="challenge({{ p.id }})">
+                                Вызов
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align: center; color: var(--text-secondary); padding: 40px;">Пока нет участников</p>
+            {% endif %}
+        </div>
+
+        <!-- Активные матчи пользователя -->
+        {% if user_matches %}
+        <div class="ladder-card">
+            <h2 style="color: var(--text-primary); margin-bottom: 20px;">⚔️ Ваши матчи</h2>
+            {% for match in user_matches %}
+            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="color: var(--text-primary); font-weight: 600;">
+                            {{ match.challenger.user.username if match.challenger and match.challenger.user else '?' }}
+                        </span>
+                        <span style="color: var(--text-secondary); margin: 0 8px;">vs</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">
+                            {{ match.opponent.user.username if match.opponent and match.opponent.user else '?' }}
+                        </span>
+                    </div>
+                    {% if match.status == 'pending' %}
+                    <span style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 4px 12px; border-radius: 12px; font-size: 12px;">Ожидание</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="/static/theme-switcher.js"></script>
+    <script>
+        async function challenge(opponentId) {
+            if (!confirm('Бросить вызов этому игроку?')) return;
+            const response = await fetch(`/ladders/{{ ladder.id }}/challenge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `opponent_id=${opponentId}&csrf_token={{ csrf_token }}`
+            });
+            const data = await response.json();
+            alert(data.message || data.error);
+            if (data.status === 'challenged') window.location.reload();
+        }
+
+        async function joinLadder(ladderId) {
+            const response = await fetch(`/ladders/${ladderId}/join`, { method: 'POST' });
+            const data = await response.json();
+            alert(data.message || data.error);
+            if (data.status === 'joined') window.location.reload();
+        }
+    </script>
+</body>
+</html>

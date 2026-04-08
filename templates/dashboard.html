@@ -53,6 +53,69 @@
         <main class="dashboard-content">
             <h1 class="dashboard-title">Обзор</h1>
 
+            <!-- Рейтинг ученика (только для учеников) -->
+            {% set _role = user.role or '' %}
+            {% if _role.startswith('student') or _role == 'user' %}
+            {% if student_rating %}
+            <section class="dashboard-section student-rating-card">
+                <div class="section-header">
+                    <h2>🎓 Мой рейтинг ученика</h2>
+                    <a href="/student-rating/my" class="btn btn-secondary btn-small">Подробнее →</a>
+                </div>
+                <div class="student-rating-display">
+                    <div class="student-rating-main">
+                        <div class="student-rating-score">{{ student_rating.score }}</div>
+                        <div class="student-rating-grade" style="background: {{ student_rating.grade_color }};">
+                            {{ student_rating.grade }}
+                        </div>
+                    </div>
+                    <div class="student-rating-stats">
+                        <div class="sr-stat">
+                            <span class="sr-stat-value">{{ student_rating.training_completed }}</span>
+                            <span class="sr-stat-label">Тренировок</span>
+                        </div>
+                        <div class="sr-stat">
+                            <span class="sr-stat-value" style="color: {% if student_rating.behavior_score >= 70 %}#34d399{% elif student_rating.behavior_score >= 40 %}#fbbf24{% else %}#f87171{% endif %};">{{ student_rating.behavior_score }}</span>
+                            <span class="sr-stat-label">Поведение</span>
+                        </div>
+                        <div class="sr-stat">
+                            <span class="sr-stat-value">{{ student_rating.training_missed }}</span>
+                            <span class="sr-stat-label">Пропуски</span>
+                        </div>
+                    </div>
+                    {% if student_rating.notes %}
+                    <div class="student-rating-notes">
+                        📝 {{ student_rating.notes[:100] }}{{ '...' if student_rating.notes|length > 100 }}
+                    </div>
+                    {% endif %}
+                    <!-- Мини-прогресс до следующего грейда -->
+                    <div class="student-rating-progress">
+                        <div class="sr-progress-label">
+                            <span>До следующего грейда</span>
+                            <span>{{ student_rating.score }} / {{ next_grade_threshold }}</span>
+                        </div>
+                        <div class="sr-progress-bar">
+                            <div class="sr-progress-fill" style="width: {{ grade_progress_pct }}%; background: {{ student_rating.grade_color }};"></div>
+                        </div>
+                        <div class="sr-grade-scale">
+                            {% for g in ['N', 'F', 'E', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS'] %}
+                            <span class="sr-grade-tick {% if g == student_rating.grade %}active{% endif %}" style="{% if g == student_rating.grade %}color: {{ student_rating.grade_color }}; font-weight: 900;{% endif %}">{{ g }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% else %}
+            <section class="dashboard-section">
+                <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(58, 134, 255, 0.05)); border-radius: 12px; border: 1px dashed var(--accent-cyan);">
+                    <p style="font-size: 40px; margin-bottom: 10px;">🎓</p>
+                    <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 8px;">У вас пока нет рейтинга ученика</p>
+                    <p style="color: var(--text-secondary); font-size: 14px;">Рейтинг появится, когда тренер начнёт вас оценивать</p>
+                </div>
+            </section>
+            {% endif %}
+            {% endif %}
+
             <!-- Статистика -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -389,6 +452,134 @@
         
         .empty-state p {
             margin-bottom: 20px;
+        }
+
+        /* Student Rating in Dashboard */
+        .student-rating-card {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.03), rgba(139, 92, 246, 0.03));
+            border: 1px solid rgba(0, 240, 255, 0.15);
+        }
+
+        .student-rating-display {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .student-rating-main {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .student-rating-score {
+            font-size: 64px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f0ff, #3a86ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .student-rating-grade {
+            display: inline-block;
+            padding: 10px 28px;
+            border-radius: 12px;
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .student-rating-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .sr-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            min-width: 100px;
+        }
+
+        .sr-stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .sr-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .student-rating-notes {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 14px 18px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+
+        .student-rating-progress {
+            padding: 16px 0;
+        }
+
+        .sr-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .sr-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-secondary);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .sr-progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.6s ease;
+        }
+
+        .sr-grade-scale {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .sr-grade-tick {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
+        .sr-grade-tick.active {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        @media (max-width: 768px) {
+            .student-rating-main { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .student-rating-stats { flex-wrap: wrap; gap: 12px; }
+            .student-rating-score { font-size: 48px; }
+            .sr-grade-scale { gap: 4px; }
+            .sr-grade-tick { font-size: 11px; }
         }
     </style>
 </body>

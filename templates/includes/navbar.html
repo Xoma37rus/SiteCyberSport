@@ -13,9 +13,11 @@
                 <a href="/discipline/tanks">🛡️ Мир танков</a>
             </div>
         </div>
-        <a href="/ratings" class="nav-link">🏆 Рейтинг</a>
+        <a href="/ratings" class="nav-link">Рейтинг</a>
         <a href="/news" class="nav-link">Новости</a>
         <a href="/tournaments" class="nav-link">Турниры</a>
+        <a href="/ladders/" class="nav-link">Ладдеры</a>
+        <a href="/subscriptions" class="nav-link">Подписки</a>
         <a href="/about" class="nav-link">О нас</a>
         
         <!-- Контейнер для авторизации (заполняется через JavaScript) -->
@@ -33,12 +35,26 @@ function updateNavMenu(user) {
     
     if (user && user.username) {
         // Пользователь авторизован
-        const avatarHtml = user.avatar_url 
+        const avatarHtml = user.avatar_url
             ? `<img src="${user.avatar_url}" alt="${user.username}" class="nav-user-avatar">`
             : `<div class="nav-user-avatar-placeholder">${user.username[0].toUpperCase()}</div>`;
-        
+
+        // Дополнительные ссылки для разных ролей
+        let extraLinks = '';
+        const role = user.role || '';
+        if (role === 'trainer' || role === 'admin' || user.is_admin) {
+            extraLinks += '<a href="/student-rating/coach" class="nav-link">🎓 Ученики</a>';
+        }
+        if (role.startsWith('student') || role === 'user') {
+            extraLinks += '<a href="/student-rating/my" class="nav-link">🎓 Мой рейтинг</a>';
+        }
+        if (user.is_admin) {
+            extraLinks += '<a href="/student-rating/admin" class="nav-link">🛡️ Админ рейтинг</a>';
+        }
+
         authContainer.innerHTML = `
             <div class="nav-user-menu">
+                ${extraLinks}
                 <a href="/dashboard" class="nav-user-link">
                     ${avatarHtml}
                     <span class="nav-user-name">${user.username}</span>
@@ -65,15 +81,16 @@ async function checkAuth() {
             },
             credentials: 'same-origin'
         });
-        
+
         if (response.ok) {
             const user = await response.json();
             updateNavMenu(user);
         } else {
+            // 401 — пользователь не авторизован, это нормально
             updateNavMenu(null);
         }
     } catch (error) {
-        console.log('Auth check failed:', error);
+        // Сеть недоступна или другая ошибка — показываем кнопки входа
         updateNavMenu(null);
     }
 }

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подписки — EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <!-- ==================== СТРАНИЦА ПОДПИСОК ==================== -->
+    <section class="section">
+        <div class="container-wide">
+            <div class="subscriptions-page-header">
+                <h1>💎 Подписки</h1>
+                <p>Выберите подходящий тариф и получите доступ к премиум-функциям платформы EasyCyberPro</p>
+            </div>
+
+            <!-- Сетка всех подписок -->
+            <div class="subscriptions-grid" id="subscriptions-grid">
+                <!-- Карточки рендерятся через JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== МОДАЛЬНОЕ ОКНО ОФЕРТЫ ==================== -->
+    <div class="offert-modal" id="offert-modal">
+        <div class="offert-modal__content">
+            <button class="offert-modal__close" id="offert-modal-close" aria-label="Закрыть">&times;</button>
+            <div class="offert-modal__title" id="offert-modal-title">Договор оферты</div>
+            <div class="offert-modal__body" id="offert-modal-body">
+                <!-- Содержимое оферты подставляется через JS -->
+            </div>
+            <div class="offert-modal__date">Дата публикации: 1 апреля 2026 г.</div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>EasyCyberPro</h4>
+                <p>Ваша платформа для киберспортивных соревнований</p>
+            </div>
+            <div class="footer-section">
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a href="/">Главная</a></li>
+                    <li><a href="/about">О нас</a></li>
+                    <li><a href="/news">Новости</a></li>
+                    <li><a href="/tournaments">Турниры</a></li>
+                    <li><a href="/subscriptions">Подписки</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 EasyCyberPro. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+    // ==================== ДАННЫЕ ПОДПИСОК (идентичны index.html) ====================
+    const subscriptions = [
+        {
+            id: 1,
+            title: "Стартовая",
+            icon: "🚀",
+            duration: "1 месяц",
+            price: "199 ₽",
+            pricePeriod: "в месяц",
+            desc: "Идеальный выбор для новичков, которые хотят попробовать платформу.",
+            features: [
+                { text: "Доступ к турнирам", enabled: true },
+                { text: "Базовая статистика", enabled: true },
+                { text: "Таблица лидеров", enabled: true },
+                { text: "Тренерские сессии", enabled: false },
+                { text: "Расширенная аналитика", enabled: false },
+                { text: "Приоритетная поддержка", enabled: false }
+            ],
+            featured: false
+        },
+        {
+            id: 2,
+            title: "Базовая",
+            icon: "⚡",
+            duration: "3 месяца",
+            price: "499 ₽",
+            pricePeriod: "за 3 месяца (166 ₽/мес)",
+            desc: "Для активных игроков, которые хотят развиваться в киберспорте.",
+            features: [
+                { text: "Все функции Стартовой", enabled: true },
+                { text: "Тренерские сессии (2/мес)", enabled: true },
+                { text: "Расширенная статистика", enabled: true },
+                { text: "История рейтинга ELO", enabled: true },
+                { text: "Приоритетная поддержка", enabled: false },
+                { text: "Экспорт статистики", enabled: false }
+            ],
+            featured: false
+        },
+        {
+            id: 3,
+            title: "Премиум",
+            icon: "👑",
+            duration: "6 месяцев",
+            price: "899 ₽",
+            pricePeriod: "за 6 месяцев (150 ₽/мес)",
+            desc: "Максимальный набор для серьёзных киберспортсменов.",
+            features: [
+                { text: "Все функции Базовой", enabled: true },
+                { text: "Безлимитные тренерские сессии", enabled: true },
+                { text: "Расширенная аналитика", enabled: true },
+                { text: "Приоритетная поддержка 24/7", enabled: true },
+                { text: "Экспорт статистики (CSV/PDF)", enabled: true },
+                { text: "Эксклюзивные турниры", enabled: true }
+            ],
+            featured: true
+        },
+        {
+            id: 4,
+            title: "Командная",
+            icon: "🏅",
+            duration: "12 месяцев",
+            price: "1 499 ₽",
+            pricePeriod: "за 12 месяцев (125 ₽/мес)",
+            desc: "Для команд и организаций, которые стремятся к победам.",
+            features: [
+                { text: "Все функции Премиум", enabled: true },
+                { text: "До 10 участников команды", enabled: true },
+                { text: "Командная аналитика", enabled: true },
+                { text: "Персональный менеджер", enabled: true },
+                { text: "API-доступ к данным", enabled: true },
+                { text: "Брендирование команды", enabled: true }
+            ],
+            featured: false
+        }
+    ];
+
+    // ==================== ТЕКСТ ОФЕРТЫ ====================
+    function getOffertText(subscriptionTitle) {
+        return `
+            <h3>1. Общие положения</h3>
+            <p>1.1. Настоящий документ является официальным предложением (публичной офертой) платформы EasyCyberPro (далее — «Исполнитель») и содержит все существенные условия оказания услуг.</p>
+            <p>1.2. Акцептом настоящей оферты считается полное и безоговорочное принятие Пользователем (далее — «Заказчик») всех условий данного договора.</p>
+            <p>1.3. Дата вступления в силу: 1 апреля 2026 года.</p>
+
+            <h3>2. Предмет договора</h3>
+            <p>2.1. Исполнитель обязуется предоставить Заказчику доступ к премиум-функциям платформы EasyCyberPro в соответствии с выбранным тарифом подписки «${subscriptionTitle}».</p>
+            <p>2.2. Перечень услуг определяется тарифным планом, указанным на странице подписки.</p>
+            <p>2.3. Услуги оказываются дистанционно посредством сети Интернет.</p>
+
+            <h3>3. Права и обязанности сторон</h3>
+            <p><strong>3.1. Исполнитель обязуется:</strong></p>
+            <ul>
+                <li>Предоставить доступ к услугам в течение 24 часов после оплаты.</li>
+                <li>Обеспечить бесперебойную работу платформы (не менее 99% uptime).</li>
+                <li>Оказывать техническую поддержку в соответствии с тарифом.</li>
+                <li>Гарантировать конфиденциальность персональных данных Заказчика.</li>
+            </ul>
+            <p><strong>3.2. Заказчик обязуется:</strong></p>
+            <ul>
+                <li>Своевременно оплачивать услуги в соответствии с тарифом.</li>
+                <li>Не передавать учётную запись третьим лицам.</li>
+                <li>Соблюдать правила платформы EasyCyberPro.</li>
+                <li>Не использовать услуги в коммерческих целях без согласия Исполнителя.</li>
+            </ul>
+
+            <h3>4. Стоимость и порядок оплаты</h3>
+            <p>4.1. Стоимость услуг определяется тарифным планом подписки «${subscriptionTitle}».</p>
+            <p>4.2. Оплата производится в рублях Российской Федерации.</p>
+            <p>4.3. Подписка активируется автоматически после поступления оплаты.</p>
+            <p>4.4. Возврат денежных средств возможен в течение 14 дней с момента оплаты при условии неиспользования премиум-функций.</p>
+
+            <h3>5. Срок действия и расторжение</h3>
+            <p>5.1. Настоящий договор вступает в силу с момента акцепта и действует до окончания срока подписки.</p>
+            <p>5.2. Автоматическое продление подписки происходит, если Заказчик не отменил подписку до окончания текущего периода.</p>
+            <p>5.3. Исполнитель вправе расторгнуть договор в одностороннем порядке при нарушении Заказчиком правил платформы.</p>
+
+            <h3>6. Ответственность сторон</h3>
+            <p>6.1. Исполнитель не несёт ответственности за временные перебои в работе платформы, вызванные техническими работами.</p>
+            <p>6.2. Исполнитель не гарантирует достижение конкретных результатов в киберспортивных соревнованиях.</p>
+            <p>6.3. Заказчик несёт полную ответственность за сохранность своей учётной записи.</p>
+
+            <h3>7. Разрешение споров</h3>
+            <p>7.1. Все споры разрешаются путём переговоров.</p>
+            <p>7.2. При невозможности урегулирования спора — обращение в суд по месту регистрации Исполнителя.</p>
+
+            <h3>8. Реквизиты Исполнителя</h3>
+            <p>Наименование: EasyCyberPro</p>
+            <p>Email: support@easycyberpro.ru</p>
+            <p>Сайт: https://easycyberpro.ru</p>
+        `;
+    }
+
+    // ==================== РЕНДЕР КАРТОЧКИ ====================
+    function renderSubscriptionCard(sub) {
+        const featuresHtml = sub.features.map(f =>
+            `<li class="${f.enabled ? '' : 'subscription-card__features li--disabled'}">${f.text}</li>`
+        ).join('');
+
+        const cardClass = `subscription-card${sub.featured ? ' subscription-card--featured' : ''}`;
+
+        return `
+            <div class="${cardClass}" id="subscription-${sub.id}" data-subscription-id="${sub.id}">
+                <div class="subscription-card__icon">${sub.icon}</div>
+                <div class="subscription-card__title">${sub.title}</div>
+                <div class="subscription-card__duration">${sub.duration}</div>
+                <div class="subscription-card__price">${sub.price}</div>
+                <div class="subscription-card__price-period">${sub.pricePeriod}</div>
+                <div class="subscription-card__desc">${sub.desc}</div>
+                <ul class="subscription-card__features">${featuresHtml}</ul>
+                <div class="subscription-card__actions">
+                    <button class="btn-subscribe" disabled title="Функция в разработке">Оформить (скоро)</button>
+                    <div class="subscription-card__offert">
+                        <a href="#" class="offert-link" data-subscription-id="${sub.id}">📄 Договор оферты</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ==================== МОДАЛЬНОЕ ОКНО ====================
+    const modal = document.getElementById('offert-modal');
+    const modalTitle = document.getElementById('offert-modal-title');
+    const modalBody = document.getElementById('offert-modal-body');
+    const modalClose = document.getElementById('offert-modal-close');
+
+    function openOffertModal(subscriptionId) {
+        const sub = subscriptions.find(s => s.id === parseInt(subscriptionId));
+        if (!sub) return;
+
+        modalTitle.textContent = `Договор оферты — ${sub.title}`;
+        modalBody.innerHTML = getOffertText(sub.title);
+        modal.classList.add('offert-modal--visible');
+        document.body.style.overflow = 'hidden'; // Блокируем скролл страницы
+    }
+
+    function closeOffertModal() {
+        modal.classList.remove('offert-modal--visible');
+        document.body.style.overflow = '';
+    }
+
+    if (modalClose) {
+        modalClose.addEventListener('click', closeOffertModal);
+    }
+
+    // Закрытие по клику вне контента
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeOffertModal();
+            }
+        });
+    }
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('offert-modal--visible')) {
+            closeOffertModal();
+        }
+    });
+
+    // ==================== ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ ====================
+    function initSubscriptionsPage() {
+        const grid = document.getElementById('subscriptions-grid');
+        if (!grid) return;
+
+        // Рендерим все карточки
+        grid.innerHTML = subscriptions.map(sub => renderSubscriptionCard(sub)).join('');
+
+        // Обработчик кликов по ссылкам оферты
+        grid.addEventListener('click', (e) => {
+            const offertLink = e.target.closest('.offert-link');
+            if (offertLink) {
+                e.preventDefault();
+                const subId = offertLink.dataset.subscriptionId;
+                openOffertModal(subId);
+                return;
+            }
+        });
+
+        // Проверяем параметр URL ?highlight=id
+        const params = new URLSearchParams(window.location.search);
+        const highlightId = params.get('highlight');
+
+        if (highlightId) {
+            // Находим карточку и подсвечиваем
+            const card = document.getElementById(`subscription-${highlightId}`);
+            if (card) {
+                // Добавляем класс подсветки
+                card.classList.add('subscription-card--highlighted');
+
+                // Плавный скролл к карточке
+                setTimeout(() => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+
+                // Убираем подсветку через 6 секунд (после 3 циклов анимации)
+                setTimeout(() => {
+                    card.classList.remove('subscription-card--highlighted');
+                }, 6500);
+            }
+        }
+    }
+
+    // ==================== ЗАПУСК ====================
+    document.addEventListener('DOMContentLoaded', initSubscriptionsPage);
+    </script>
+</body>
+</html>

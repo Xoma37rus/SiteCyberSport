@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Ладдеры - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d1117">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="ladders-container">
+        <h1 style="text-align: center; margin-bottom: 40px;">🪜 Ладдеры</h1>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Ежедневные рейтинговые соревнования. Присоединяйтесь, бросайте вызовы соперникам и поднимайтесь в рейтинге!
+        </p>
+
+        <!-- Активные ладдеры -->
+        {% if active_ladders %}
+        <section style="margin-bottom: 40px;">
+            <h2 style="color: var(--text-primary); margin-bottom: 20px;">🟢 Активные</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                {% for ladder in active_ladders %}
+                <div class="ladder-card">
+                    <div class="ladder-header">
+                        <div>
+                            <h3 style="color: var(--text-primary); margin-bottom: 8px;">{{ ladder.name }}</h3>
+                            <span style="color: var(--text-secondary); font-size: 14px;">
+                                {{ ladder.discipline.name if ladder.discipline else 'N/A' }} • {{ ladder.game_type }}
+                            </span>
+                        </div>
+                        <span class="ladder-status active">Active</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <span style="color: var(--text-secondary); font-size: 14px;">Участников: {{ ladder.participants | length }}/{{ ladder.max_participants }}</span>
+                        <span style="color: var(--text-secondary); font-size: 14px;">
+                            До: {{ ladder.end_date.strftime('%H:%M') if ladder.end_date else 'N/A' }}
+                        </span>
+                    </div>
+                    <a href="/ladders/{{ ladder.id }}" class="btn btn-primary" style="display: block; text-align: center; text-decoration: none;">Перейти →</a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Предстоящие ладдеры -->
+        {% if upcoming_ladders %}
+        <section style="margin-bottom: 40px;">
+            <h2 style="color: var(--text-primary); margin-bottom: 20px;">🔵 Предстоящие</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                {% for ladder in upcoming_ladders %}
+                <div class="ladder-card">
+                    <div class="ladder-header">
+                        <div>
+                            <h3 style="color: var(--text-primary); margin-bottom: 8px;">{{ ladder.name }}</h3>
+                            <span style="color: var(--text-secondary); font-size: 14px;">
+                                {{ ladder.discipline.name if ladder.discipline else 'N/A' }} • {{ ladder.game_type }}
+                            </span>
+                        </div>
+                        <span class="ladder-status upcoming">Upcoming</span>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <span style="color: var(--text-secondary); font-size: 14px;">
+                            Начало: {{ ladder.start_date.strftime('%d.%m.%Y %H:%M') if ladder.start_date else 'TBD' }}
+                        </span>
+                    </div>
+                    <button class="btn btn-primary" onclick="joinLadder({{ ladder.id }})" style="width: 100%;">Присоединиться</button>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Завершённые ладдеры -->
+        {% if completed_ladders %}
+        <section>
+            <h2 style="color: var(--text-primary); margin-bottom: 20px;">⚫ Завершённые</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                {% for ladder in completed_ladders %}
+                <div class="ladder-card" style="opacity: 0.7;">
+                    <div class="ladder-header">
+                        <div>
+                            <h3 style="color: var(--text-secondary); margin-bottom: 8px;">{{ ladder.name }}</h3>
+                            <span style="color: var(--text-secondary); font-size: 14px;">
+                                {{ ladder.discipline.name if ladder.discipline else 'N/A' }}
+                            </span>
+                        </div>
+                        <span class="ladder-status completed">Completed</span>
+                    </div>
+                    <a href="/ladders/{{ ladder.id }}" style="color: var(--accent-cyan); text-decoration: none; font-size: 14px;">Посмотреть результаты →</a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if not active_ladders and not upcoming_ladders and not completed_ladders %}
+        <div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 20px;">🪜</p>
+            <p style="font-size: 18px;">Ладдеров пока нет. Они создаются автоматически каждый день.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="/static/theme-switcher.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script src="/static/pwa.js"></script>
+    <script>
+        async function joinLadder(ladderId) {
+            const response = await fetch(`/ladders/${ladderId}/join`, { method: 'POST' });
+            const data = await response.json();
+            if (data.status === 'joined') {
+                alert('Вы присоединились к ладдеру!');
+                window.location.reload();
+            } else {
+                alert(data.error || 'Ошибка');
+            }
+        }
+    </script>
+</body>
+</html>

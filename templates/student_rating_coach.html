@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Рейтинг учеников - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .student-row { transition: all 0.2s; }
+        .student-row:hover { background: var(--bg-card) !important; }
+        .grade-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 16px;
+            color: #fff;
+            min-width: 50px;
+            text-align: center;
+        }
+        .score-display {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+        .change-btn {
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .change-btn:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div style="max-width: 1100px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="text-align: center; margin-bottom: 10px;">🎓 Рейтинг учеников</h1>
+        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 30px;">
+            Управление рейтингом ваших учеников. Изменяйте рейтинг за успехи, поведение и посещаемость.
+        </p>
+
+        {% if students_data %}
+        <div style="background: var(--bg-card); border-radius: 12px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--bg-secondary);">
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">#</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Ученик</th>
+                        <th style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Рейтинг</th>
+                        <th style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Грейд</th>
+                        <th style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Поведение</th>
+                        <th style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Тренировки</th>
+                        <th style="padding: 16px; text-align: right; color: var(--text-secondary); font-size: 13px; text-transform: uppercase;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in students_data %}
+                    <tr class="student-row" style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 16px; color: var(--text-secondary); font-weight: 700;">{{ loop.index }}</td>
+                        <td style="padding: 16px;">
+                            <strong style="color: var(--text-primary);">{{ item.student.username }}</strong>
+                            {% if item.notes %}
+                            <span style="color: var(--text-secondary); font-size: 12px; display: block; margin-top: 4px;">📝 {{ item.notes[:50] }}{{ '...' if item.notes|length > 50 }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            <span class="score-display">{{ item.rating.score }}</span>
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            <span class="grade-badge" style="background: {{ item.rating.grade_color }};">
+                                {{ item.rating.grade }}
+                            </span>
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            <span style="color: {% if item.rating.behavior_score >= 70 %}#34d399{% elif item.rating.behavior_score >= 40 %}#fbbf24{% else %}#f87171{% endif %}; font-weight: 600;">
+                                {{ item.rating.behavior_score }}
+                            </span>
+                        </td>
+                        <td style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 14px;">
+                            <span style="color: #34d399;">{{ item.rating.training_completed }}✓</span> /
+                            <span style="color: #f87171;">{{ item.rating.training_missed }}✗</span>
+                        </td>
+                        <td style="padding: 16px; text-align: right;">
+                            <button class="change-btn" onclick="openModal({{ item.student.id }}, '{{ item.student.username }}', {{ item.rating.score }})">
+                                ✏️ Изменить
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 16px;">👥</p>
+            <p>У вас пока нет учеников</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Модальное окно изменения рейтинга -->
+    <div id="changeModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: var(--bg-card); border-radius: 16px; padding: 32px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h3 style="color: var(--text-primary); margin-bottom: 8px;">✏️ Изменить рейтинг</h3>
+            <p id="modalStudentName" style="color: var(--accent-cyan); font-weight: 600; margin-bottom: 4px;"></p>
+            <p id="modalCurrentScore" style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;"></p>
+
+            <form id="changeForm" onsubmit="submitChange(event)">
+                <input type="hidden" id="modalStudentId">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Изменение рейтинга</label>
+                    <input type="number" id="scoreChange" name="score_change" value="0" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 18px; text-align: center;" required>
+                    <p style="color: var(--text-secondary); font-size: 12px; margin-top: 6px;">Положительное = повышение, отрицательное = понижение</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Изменение поведения</label>
+                    <input type="number" name="behavior_change" value="0" min="-20" max="20" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 16px; text-align: center;">
+                    <p style="color: var(--text-secondary); font-size: 12px; margin-top: 6px;">От -20 до +20 к шкале поведения (0-100)</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Причина</label>
+                    <select name="reason" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                        <option value="Успешное выполнение заданий">Успешное выполнение заданий</option>
+                        <option value="Хорошая посещаемость">Хорошая посещаемость</option>
+                        <option value="Отличное поведение">Отличное поведение</option>
+                        <option value="Победа в турнире">Победа в турнире</option>
+                        <option value="Пропуск тренировки">Пропуск тренировки</option>
+                        <option value="Нарушение дисциплины">Нарушение дисциплины</option>
+                        <option value="Ежемесячная оценка">Ежемесячная оценка</option>
+                        <option value="other">Другое</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Комментарий (опционально)</label>
+                    <textarea name="notes" rows="3" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); resize: vertical;" placeholder="Дополнительный комментарий..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/theme-switcher.js"></script>
+    <script>
+        function openModal(studentId, username, currentScore) {
+            document.getElementById('modalStudentId').value = studentId;
+            document.getElementById('modalStudentName').textContent = 'Ученик: ' + username;
+            document.getElementById('modalCurrentScore').textContent = 'Текущий рейтинг: ' + currentScore;
+            document.getElementById('scoreChange').value = 0;
+            document.getElementById('changeModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('changeModal').style.display = 'none';
+        }
+
+        async function submitChange(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const response = await fetch('/student-rating/api/change', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                alert('Рейтинг изменён! Новый рейтинг: ' + data.new_score + ' (Грейд: ' + data.new_grade + ')');
+                closeModal();
+                window.location.reload();
+            } else {
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        }
+
+        document.getElementById('changeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

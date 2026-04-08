@@ -52,6 +52,19 @@ class Settings(BaseSettings):
     # ==================== Logging ====================
     log_level: str = "INFO"
 
+    # ==================== Steam Integration ====================
+    steam_api_key: str = ""
+
+    # ==================== Discord Integration ====================
+    discord_bot_token: str = ""
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    discord_announcements_channel: str = ""
+
+    # ==================== Matchmaking ====================
+    matchmaking_enabled: bool = True
+    matchmaking_check_interval: int = 5
+
     class Config:
         env_file = ".env"
         extra = "ignore"

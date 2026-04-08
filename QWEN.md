@@ -1,402 +1,479 @@
 # EasyCyberPro — Киберспортивная платформа
 
-## 📋 Обзор проекта
+**Версия:** 2.0
+**Дата создания:** Апрель 2026
+**Последнее обновление:** 7 апреля 2026
 
-**EasyCyberPro** — это веб-платформа для киберспортивных соревнований, построенная на **FastAPI (Python)**. Платформа позволяет организовывать турниры, управлять командами, вести статистику игроков и предоставляет тренерскую систему.
+## Обзор проекта
 
-### Основное назначение
-- Организация и проведение онлайн-турниров по кибердисциплинам (Dota 2, CS2, Мир танков)
-- Управление командами и игроками
-- Рейтинговая система и статистика
-- Тренерская платформа (уникальная фича)
-- Новостной портал
+**EasyCyberPro** — это полнофункциональная веб-платформа для киберспортивных соревнований, разработанная на **FastAPI** (Python). Платформа позволяет организовывать турниры по Dota 2, CS2, Мир танков, управлять командами и игроками, вести рейтинг игроков (ELO система, аналог FACEIT), проводить турниры с турнирными сетками, а также предоставляет систему обучения у тренеров.
 
----
+### Ключевые возможности
 
-## 🏗️ Архитектура и технологии
+- 🎮 **Турниры:** Каталог, фильтрация, регистрация, турнирные сетки (Single/Double Elimination)
+- 👥 **Команды:** Создание, управление участниками, статистика
+- 📊 **Рейтинг ELO:** 10 уровней (аналог FACEIT), таблица лидеров, история изменений
+- 🏆 **Матчмейкинг:** Автоматический подбор соперников (базовый)
+- 🎓 **Тренерская система:** Ученики, тренировки, посещаемость, заметки
+- 📰 **Новости:** CRUD операции, загрузка изображений, публикация
+- 🔐 **Аутентификация:** Регистрация, вход, logout, восстановление пароля, email-верификация
+- 👤 **Профиль:** Аватар, био, соцсети, дисциплины, настройки приватности
+- 🛡️ **Админ-панель:** Управление пользователями, турнирами, командами, тренерами, логи действий
+- 📡 **REST API v1:** Полноценное API для всех сущностей
 
-### Стек технологий
-| Компонент | Технология |
+### Технологический стек
+
+| Категория | Технология |
 |-----------|------------|
-| **Backend** | Python 3.10+, FastAPI |
-| **База данных** | SQLite (разработка), поддержка PostgreSQL через SQLAlchemy |
-| **ORM** | SQLAlchemy 2.0 |
-| **Миграции** | Alembic |
-| **Шаблоны** | Jinja2 |
-| **Аутентификация** | JWT (python-jose), bcrypt |
-| **Валидация** | Pydantic 2.0 |
-| **Email** | FastAPI-Mail (SMTP) |
-| **Rate Limiting** | SlowAPI |
-| **Тесты** | pytest, pytest-asyncio, httpx |
+| **Фреймворк** | FastAPI 0.100+ |
+| **Язык** | Python 3.10+ |
+| **ORM** | SQLAlchemy 2.0+ |
+| **Миграции** | Alembic 1.12+ |
+| **Валидация** | Pydantic 2.0+ |
+| **Шаблоны** | Jinja2 3.1+ |
+| **БД (dev)** | SQLite |
+| **БД (prod)** | PostgreSQL (рекомендуется) |
+| **Безопасность** | bcrypt, python-jose (JWT), SlowAPI (rate limiting), CSRF |
+| **Email** | fastapi-mail (Gmail SMTP) |
+| **Frontend** | HTML5, CSS3 (тёмная тема), JavaScript |
 
-### Структура проекта
+## Структура проекта
+
 ```
 web_app/
-├── main.py                 # Точка входа, инициализация FastAPI
-├── config.py               # Настройки через pydantic-settings
-├── models.py               # SQLAlchemy модели БД
-├── schemas.py              # Pydantic схемы для API
-├── auth.py                 # Аутентификация, регистрация, восстановление пароля
-├── api.py                  # REST API v1 endpoints
-├── utils.py                # Утилиты (хеширование, JWT, CSRF)
-├── mailer.py               # Email-рассылки
+├── main.py                     # Точка входа, инициализация FastAPI, роутинг
+├── config.py                   # Настройки через pydantic-settings (.env)
+├── models.py                   # SQLAlchemy модели БД (User, News, Team, Tournament, Match, и т.д.)
+├── schemas.py                  # Pydantic схемы для API валидации
+├── utils.py                    # Утилиты: хеширование, JWT, ELO расчёты, CSRF
+├── auth.py                     # Аутентификация, регистрация, восстановление пароля
+├── api.py                      # REST API v1 endpoints (JSON responses)
+├── leaderboard.py              # Таблица лидеров
+├── mailer.py                   # Email-рассылка (верификация, уведомления)
 │
-├── admin.py                # Админ-панель: пользователи
-├── admin_teams.py          # Админ-панель: команды
-├── admin_tournaments.py    # Админ-панель: турниры
-├── admin_coaches.py        # Админ-панель: тренеры
+├── admin.py                    # Админ-панель: пользователи
+├── admin_teams.py              # Админ-панель: команды
+├── admin_tournaments.py        # Админ-панель: турниры
+├── admin_coaches.py            # Админ-панель: тренеры
 │
-├── news.py                 # Новости (CRUD)
-├── disciplines.py          # Дисциплины (игры)
-├── tournaments.py          # Турниры для пользователей
-├── teams.py                # Команды (создание, управление)
-├── profile.py              # Профиль пользователя
-├── coach.py                # Тренерская система
+├── news.py                     # Новости (CRUD)
+├── disciplines.py              # Дисциплины (Dota 2, CS2, Мир танков)
+├── tournaments.py              # Публичные турниры для пользователей
+├── profile.py                  # Профиль пользователя
+├── coach.py                    # Тренерская система (сессии, ученики)
 │
-├── alembic/                # Миграции БД
-├── templates/              # Jinja2 HTML-шаблоны
-├── static/                 # Статика (CSS, изображения, загрузки)
-├── venv/                   # Python virtual environment
+├── alembic/                    # Миграции БД
+│   ├── versions/               # Файлы миграций
+│   └── env.py                  # Конфигурация Alembic
+├── templates/                  # Jinja2 HTML-шаблоны
+│   ├── includes/               # Части шаблонов (navbar, footer)
+│   ├── admin/                  # Шаблоны админ-панели
+│   ├── coach/                  # Шаблоны тренера
+│   └── *.html                  # Основные страницы
+├── static/                     # Статические файлы
+│   ├── style.css               # Основные стили (тёмная тема)
+│   ├── bracket.js              # Визуализация турнирных сеток
+│   ├── images/                 # Изображения (дисциплины, иконки)
+│   └── uploads/                # Загруженные пользователями файлы
 │
-├── requirements.txt        # Зависимости
-├── .env                    # Переменные окружения (секреты)
-└── pytest.ini              # Настройки тестов
+├── requirements.txt            # Python зависимости
+├── .env                        # Переменные окружения (не коммитить!)
+├── pytest.ini                  # Настройки pytest
+├── alembic.ini                 # Конфигурация Alembic
+└── app.db                      # SQLite база данных (dev)
 ```
 
----
+## Модели данных
 
-## 🚀 Запуск и разработка
+### Основные сущности
 
-### Предварительные требования
+| Модель | Описание |
+|--------|----------|
+| **User** | Пользователи (email, username, роль, профиль, настройки, статистика) |
+| **Discipline** | Игровые дисциплины (Dota 2, CS2, Мир танков) |
+| **Team** | Команды (капитан, дисциплина, участники, рейтинг, win rate) |
+| **TeamMember** | Участники команды |
+| **Tournament** | Турниры (даты, статус, формат, призовой фонд) |
+| **Match** | Матчи турнирной сетки (команды, счёт, раунд, статус) |
+| **TournamentParticipation** | Участие команды в турнире |
+| **News** | Новости (автор, контент, изображения) |
+| **AdminLog** | Логирование действий администратора |
+| **PasswordResetToken** | Токены сброса пароля |
+
+### Система рейтинга ELO
+
+| Модель | Описание |
+|--------|----------|
+| **PlayerRating** | Рейтинг игрока по дисциплинам (ELO, уровень, статистика) |
+| **RatingChange** | История изменений рейтинга |
+| **MatchmakingQueue** | Очередь матчмейкинга |
+
+### Тренерская система
+
+| Модель | Описание |
+|--------|----------|
+| **CoachStudent** | Связь тренер-ученик |
+| **TrainingSession** | Тренировки (расписание, статус, заметки) |
+| **TrainingAttendance** | Посещаемость тренировок |
+
+### Связи многие-ко-многим
+
+- **user_disciplines** — пользователи и их дисциплины (с skill_level: beginner/intermediate/advanced/pro)
+
+## Быстрый старт
+
+### Требования
+
 - Python 3.10 или выше
-- pip
+- pip (менеджер пакетов Python)
 
-### Установка
+### Установка и запуск
 
 ```bash
-# Клонирование и переход в директорию
+# Переход в директорию проекта
 cd C:\Users\User\web_app
 
-# Создание виртуального окружения
-python -m venv venv
-
 # Активация виртуального окружения
-# Windows:
 venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
 
-# Установка зависимостей
-pip install -r requirements.txt
+# Запуск сервера
+python main.py
 ```
 
-### Настройка окружения
+Откройте браузер: **http://localhost:8000**
 
-Создайте файл `.env` в корне проекта:
+### Альтернативный запуск (с авто-перезагрузкой)
 
-```env
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Конфигурация
+
+### Файл .env
+
+Основные параметры в `.env`:
+
+```ini
+# Database
+DATABASE_URL=sqlite:///./app.db
+
+# Security
+SECRET_KEY=<auto-generated>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+ADMIN_TOKEN_EXPIRE_HOURS=8
+
 # Email (Gmail)
 MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_app_password_here
+MAIL_PASSWORD=your_app_password
 MAIL_FROM=noreply@easycyberpro.ru
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
-
-# Приложение
-APP_URL=http://localhost:8000
-SECRET_KEY=your_secret_key_here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Database
-DATABASE_URL=sqlite:///./app.db
 
 # Rate Limiting
 RATE_LIMIT_PER_MINUTE=10
 RATE_LIMIT_BURST=5
 
-# Logging
-LOG_LEVEL=INFO
+# App
+APP_URL=http://localhost:8000
+DEBUG=false
 ```
 
-> **Примечание:** `SECRET_KEY` генерируется автоматически при первом запуске, если не задан.
-
-### Запуск сервера
-
-```bash
-# Через main.py
-python main.py
-
-# Или через uvicorn напрямую
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-# Режим разработки с авто-перезагрузкой
-uvicorn main:app --reload --log-level debug
+**Генерация SECRET_KEY:**
+```python
+import secrets
+print(secrets.token_urlsafe(32))
 ```
 
-Сервер будет доступен по адресу: **http://localhost:8000**
+> **Примечание:** При первом запуске SECRET_KEY генерируется автоматически и сохраняется в `.env`.
 
-### API Документация
+## База данных
 
-FastAPI автоматически генерирует интерактивную документацию:
+### Автоматическое создание таблиц
 
-- **Swagger UI:** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
+При запуске `main.py` таблицы создаются автоматически:
 
----
-
-## 🧪 Тестирование
-
-```bash
-# Запуск всех тестов
-pytest
-
-# Запуск с выводом coverage
-pytest --cov=.
-
-# Запуск конкретного теста
-pytest test_db.py -v
-
-# Запуск с выводом логов
-pytest -s -v
+```python
+create_tables()
+init_disciplines()  # Инициализация Dota 2, CS2, Мир танков
 ```
 
----
-
-## 🗄️ База данных
-
-### Модели данных
-
-#### Основные сущности
-
-| Модель | Описание |
-|--------|----------|
-| `User` | Пользователи (email, username, пароль, профиль, роли) |
-| `News` | Новости платформы |
-| `Discipline` | Игровые дисциплины (Dota 2, CS2, Tanks) |
-| `Team` | Команды с капитаном и участниками |
-| `TeamMember` | Участники команд |
-| `Tournament` | Турниры с настройками формата |
-| `TournamentParticipation` | Заявки команд на турниры |
-| `Match` | Матчи турнирной сетки |
-| `AdminLog` | Лог действий администратора |
-| `PasswordResetToken` | Токены сброса пароля |
-| `CoachStudent` | Связь тренер-ученик |
-| `TrainingSession` | Тренировочные сессии |
-| `TrainingAttendance` | Посещаемость тренировок |
-
-### Миграции (Alembic)
+### Alembic миграции
 
 ```bash
-# Создание новой миграции
-alembic revision --autogenerate -m "Description"
+# Создать миграцию
+alembic revision --autogenerate -m "Описание изменений"
 
-# Применение миграций
+# Применить все миграции
 alembic upgrade head
 
-# Откат миграции
+# Откатить одну миграцию
 alembic downgrade -1
+
+# Текущая версия
+alembic current
 
 # История миграций
 alembic history
 ```
 
-### Инициализация данных
+## API Документация
 
-При первом запуске автоматически создаются:
-- Таблицы БД
-- Дисциплины по умолчанию (Dota 2, CS2, Мир танков)
+FastAPI автоматически генерирует интерактивную документацию:
 
----
+| Документация | URL |
+|--------------|-----|
+| **Swagger UI** | http://localhost:8000/docs |
+| **ReDoc** | http://localhost:8000/redoc |
+| **OpenAPI JSON** | http://localhost:8000/openapi.json |
 
-## 🔐 Безопасность
+### Основные API endpoints (v1)
 
-### Аутентификация
-- **JWT токены** с сроком действия 30 минут
-- **HttpOnly cookie** для хранения токена
-- **bcrypt** для хеширования паролей
-- **Email-верификация** (авто-верификация в режиме разработки)
-
-### Защита
-- **Rate Limiting:** 10 запросов/минуту, 5/секунду (burst)
-- **CSRF Protection** для форм
-- **CORS** настроен для localhost:8000
-
-### Роли пользователей
-- `admin` — полный доступ к админ-панели
-- `trainer` — доступ к тренерским функциям
-- `student`, `student_pro`, `student_ult` — уровни учеников
-- `user` — базовый пользователь
-
----
-
-## 📡 REST API
-
-API версии v1 доступно по префиксу `/api/v1`.
-
-### Основные endpoints
+#### Аутентификация
 
 | Endpoint | Метод | Описание |
 |----------|-------|----------|
 | `/api/v1/auth/me` | GET | Текущий пользователь |
-| `/api/v1/health` | GET | Статус сервиса |
-| `/api/v1/news` | GET | Список новостей (пагинация) |
+
+#### Рейтинги и лидерборды
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/v1/leaderboard` | GET | Таблица лидеров (параметр: `discipline`) |
+| `/api/v1/leaderboards` | GET | Все дисциплины с лидербордами |
+| `/api/v1/users/{user_id}/ratings` | GET | Все рейтинги пользователя |
+| `/api/v1/users/{user_id}/rating/{discipline_slug}` | GET | Рейтинг по конкретной дисциплине |
+| `/api/v1/users/{user_id}/rating/{discipline_slug}/history` | GET | История изменений рейтинга |
+
+#### Матчмейкинг
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/v1/matchmaking/queue` | POST | Встать в очередь |
+| `/api/v1/matchmaking/status` | GET | Статус очереди |
+| `/api/v1/matchmaking/queue` | DELETE | Выйти из очереди |
+
+#### Турниры
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/v1/tournaments` | GET | Список турниров |
+| `/api/v1/tournaments/{id}` | GET | Детали турнира |
+| `/api/v1/tournaments/{id}/bracket` | GET | Турнирная сетка |
+| `/api/v1/matches/{match_id}` | GET | Детали матча |
+
+#### Новости, команды, дисциплины
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/v1/news` | GET | Список новостей |
 | `/api/v1/news/{id}` | GET | Новость по ID |
+| `/api/v1/teams` | GET | Список команд |
 | `/api/v1/disciplines` | GET | Список дисциплин |
-| `/api/v1/teams` | GET | Список команд (фильтр по дисциплине) |
-| `/api/v1/teams/{id}` | GET | Команда по ID |
-| `/api/v1/tournaments` | GET | Список турниров (фильтры) |
-| `/api/v1/tournaments/{id}` | GET | Турнир по ID |
 
-### Пример запроса
+## Система рейтинга ELO
 
-```bash
-curl -X GET "http://localhost:8000/api/v1/news?page=1&limit=10" \
-  -H "Accept: application/json"
+### Уровни (аналог FACEIT)
+
+| Уровень | Диапазон ELO |
+|---------|--------------|
+| 1 | 0–199 |
+| 2 | 200–399 |
+| 3 | 400–599 |
+| 4 | 600–799 |
+| 5 | 800–999 |
+| 6 | 1000–1199 |
+| 7 | 1200–1399 |
+| 8 | 1400–1699 |
+| 9 | 1700–1999 |
+| 10 | 2000+ |
+
+### K-факторы
+
+- **48** — новые игроки (< 10 игр)
+- **32** — базовый (10–100 игр)
+- **16** — опытные (> 100 игр)
+
+### Формула расчёта
+
+```
+ΔR = K * (S - E)
 ```
 
----
+Где:
+- `S` — фактический счёт (1 = победа, 0 = поражение, 0.5 = ничья)
+- `E` — ожидаемый счёт: `1 / (1 + 10 ^ ((R_opponent - R_player) / 400))`
 
-## 🎨 Frontend
+Стартовый ELO: **1000**
 
-### Шаблоны (Jinja2)
+## Архитектура приложения
 
-Расположены в `templates/`:
+### Роутинг
 
-| Шаблон | Описание |
-|--------|----------|
-| `index.html` | Главная страница |
-| `login.html`, `register.html` | Аутентификация |
-| `profile.html` | Профиль пользователя |
-| `dashboard.html` | Дашборд |
-| `tournaments.html`, `tournament_detail.html` | Турниры |
-| `news.html`, `news_detail.html` | Новости |
-| `admin/*.html` | Админ-панель |
-| `coach/*.html` | Тренерский кабинет |
+Все роутеры регистрируются в `main.py`:
 
-### Статика
+| Модуль | Префикс / Назначение |
+|--------|---------------------|
+| `auth.py` | `/register`, `/login`, `/logout`, `/verify`, `/forgot-password`, `/reset-password` |
+| `admin.py` | `/admin/*` — управление пользователями |
+| `admin_teams.py` | `/admin/teams/*` — управление командами |
+| `admin_tournaments.py` | `/admin/tournaments/*` — управление турнирами |
+| `admin_coaches.py` | `/admin/coaches/*` — управление тренерами |
+| `news.py` | `/news/*` — CRUD новостей (admin + public) |
+| `disciplines.py` | `/disciplines/*` — дисциплины |
+| `tournaments.py` | `/tournaments/*` — публичные турниры |
+| `api.py` | `/api/v1/*` — REST API |
+| `profile.py` | `/profile/*` — профиль пользователя |
+| `coach.py` | `/coach/*` — тренерская система |
+| `leaderboard.py` | `/leaderboard/*` — таблицы лидеров |
 
-- `static/style.css` — основные стили (тёмная тема, CSS-переменные)
-- `static/images/` — изображения
-- `static/uploads/` — загруженные файлы
+### Аутентификация
 
----
+- **Токены:** JWT через cookie (`access_token`)
+- **Хеширование:** bcrypt
+- **CSRF:** токены через `secrets.token_urlsafe`
+- **Rate limiting:** SlowAPI (10/мин, 5/сек burst)
 
-## 📦 Основные модули
+### Flash-сообщения
 
-### auth.py
-- Регистрация (`/register`)
-- Вход (`/login`)
-- Выход (`/logout`)
-- Восстановление пароля (`/forgot-password`, `/reset-password`)
-- Верификация email (`/verify`)
+Flash-сообщения передаются через cookie в base64-кодированном JSON формате.
 
-### admin.py
-- Управление пользователями
-- Логи действий
-- Модерация
-
-### tournaments.py
-- Каталог турниров
-- Регистрация команд
-- Управление заявками
-
-### coach.py
-- Список учеников
-- Планирование тренировок
-- Отметка посещаемости
-
-### mailer.py
-- Отправка верификационных писем
-- Уведомления о турнирах
-- Сброс пароля
-
----
-
-## 🔧 Конфигурация
-
-### config.py
-
-Класс `Settings` на основе `pydantic-settings` загружает переменные из:
-1. Переменных окружения
-2. Файла `.env`
-
-```python
-from config import settings
-
-# Доступ к настройкам
-settings.database_url
-settings.secret_key
-settings.rate_limit_per_minute
-settings.mail_server
-```
-
----
-
-## 📝 Планы развития
-
-См. `DEVELOPMENT_PLAN.md` для детального плана.
-
-### Критические задачи (Фаза 1-2)
-1. **Рейтинговая система ELO** — модель `PlayerRating`, расчёт рейтинга, leaderboard
-2. **Визуализация турнирных сеток** — Bracket UI (SVG/Canvas)
-3. **Матчмейкинг** — автоматический подбор игроков по ELO
-4. **Античит** — базовая валидация результатов
-
-### Улучшения UX (Фаза 3-4)
-- Расширенная статистика игроков
-- Ладдеры (ежедневные соревнования)
-- Discord-интеграция
-- Стриминг (Twitch embed)
-
-### Монетизация
-- Premium-подписка
-- Система наград и достижений
-
----
-
-## 🐛 Известные ограничения
-
-| Ограничение | Решение |
-|-------------|---------|
-| SQLite не подходит для production | Миграция на PostgreSQL |
-| Нет визуализации турнирной сетки | В разработке (Bracket UI) |
-| Ручной ввод результатов матчей | Интеграция Steam API (план) |
-| Нет античита | Базовая валидация (план) |
-
----
-
-## 📞 Поддержка и контакты
-
-- **Email:** noreply@easycyberpro.ru
-- **Документация:** `/docs` (Swagger)
-
----
-
-## 📄 Лицензия
-
-EasyCyberPro — проприетарное ПО.
-
----
-
-## 📊 Быстрые команды
+## Тестирование
 
 ```bash
-# Запуск сервера
-uvicorn main:app --reload
+# Все тесты
+pytest
 
-# Запуск тестов
+# С подробным выводом
 pytest -v
 
-# Создание миграции
-alembic revision --autogenerate -m "new migration"
+# С покрытием кода
+pip install pytest-cov
+pytest --cov=. --cov-report=html
 
-# Применение миграций
-alembic upgrade head
-
-# Проверка зависимостей
-pip list --outdated
-
-# Обновление зависимостей
-pip install -r requirements.txt --upgrade
+# Конкретный тестовый файл
+pytest test_db.py -v
 ```
+
+Отчёт о покрытии: `htmlcov/index.html`
+
+## Разработка
+
+### Добавление нового модуля
+
+1. Создать файл модуля (например, `my_module.py`)
+2. Определить роутер:
+   ```python
+   from fastapi import APIRouter
+   router = APIRouter(prefix="/my-module", tags=["My Module"])
+
+   @router.get("/")
+   async def my_endpoint():
+       return {"message": "Hello"}
+   ```
+3. Зарегистрировать роутер в `main.py`:
+   ```python
+   from my_module import router as my_module_router
+   app.include_router(my_module_router)
+   ```
+
+### Создание новой модели БД
+
+1. Добавить класс в `models.py` (наследник `Base`)
+2. Создать миграцию Alembic:
+   ```bash
+   alembic revision --autogenerate -m "Add new_model"
+   alembic upgrade head
+   ```
+3. Добавить Pydantic схему в `schemas.py`
+
+### Шаблоны и статика
+
+- HTML шаблоны: `templates/`
+- Статические файлы: `static/`
+- Загруженные файлы: `static/uploads/`
+
+## Развёртывание
+
+### Production (uvicorn)
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info
+```
+
+### Gunicorn (рекомендуется)
+
+```bash
+pip install gunicorn
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### Production БД (PostgreSQL)
+
+В `.env`:
+```ini
+DATABASE_URL=postgresql://user:password@localhost:5432/easycyberpro
+```
+
+## Полезные команды
+
+| Задача | Команда |
+|--------|---------|
+| Запуск сервера | `python main.py` |
+| Запуск с reload | `uvicorn main:app --reload` |
+| Запустить тесты | `pytest -v` |
+| Миграция БД | `alembic upgrade head` |
+| Создать миграцию | `alembic revision --autogenerate -m "msg"` |
+| Найти процесс на порту 8000 | `netstat -ano \| findstr :8000` |
+| Убить процесс | `taskkill /PID <PID> /F` |
+
+## Решение проблем
+
+### ModuleNotFoundError
+
+```bash
+# Убедитесь, что виртуальное окружение активировано
+venv\Scripts\activate
+
+# Переустановите зависимости
+pip install -r requirements.txt
+```
+
+### Address already in use (порт 8000)
+
+```bash
+# Windows: найти процесс
+netstat -ano | findstr :8000
+# Завершить процесс
+taskkill /PID <PID> /F
+```
+
+### CSRF token mismatch
+
+Очистите cookie брауера и перезагрузите страницу.
+
+## Зависимости (requirements.txt)
+
+```
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+jinja2>=3.1.0
+python-multipart>=0.0.6
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+passlib>=1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]>=3.3.0
+fastapi-mail>=1.4.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+slowapi>=0.1.9
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0
+```
+
+## Лицензия
+
+EasyCyberPro — проприетарное программное обеспечение. Все права защищены © 2026 EasyCyberPro.

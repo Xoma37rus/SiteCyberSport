@@ -1,0 +1,77 @@
+{
+  "common": {
+    "home": "Главная",
+    "tournaments": "Турниры",
+    "leaderboard": "Рейтинг",
+    "news": "Новости",
+    "profile": "Профиль",
+    "login": "Войти",
+    "register": "Регистрация",
+    "logout": "Выйти",
+    "settings": "Настройки",
+    "admin": "Админ-панель",
+    "search": "Поиск",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "back": "Назад",
+    "next": "Далее",
+    "submit": "Отправить"
+  },
+  "tournaments": {
+    "title": "Турниры",
+    "active": "Активные",
+    "upcoming": "Предстоящие",
+    "completed": "Завершённые",
+    "register": "Регистрация",
+    "bracket": "Турнирная сетка",
+    "participants": "Участники",
+    "prize_pool": "Призовой фонд",
+    "format": "Формат",
+    "start_date": "Дата начала"
+  },
+  "rating": {
+    "title": "Рейтинг",
+    "level": "Уровень",
+    "elo": "ELO",
+    "games": "Игры",
+    "wins": "Победы",
+    "losses": "Поражения",
+    "win_rate": "Винрейт",
+    "history": "История",
+    "progress": "Прогресс"
+  },
+  "profile": {
+    "title": "Профиль",
+    "edit": "Редактировать",
+    "avatar": "Аватар",
+    "bio": "О себе",
+    "stats": "Статистика",
+    "teams": "Команды",
+    "achievements": "Достижения"
+  },
+  "coach": {
+    "title": "Тренерство",
+    "dashboard": "Панель тренера",
+    "students": "Ученики",
+    "sessions": "Тренировки",
+    "schedule": "Расписание"
+  },
+  "ladders": {
+    "title": "Ладдеры",
+    "join": "Присоединиться",
+    "challenge": "Вызов",
+    "standings": "Таблица",
+    "matches": "Матчи"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Пароль",
+    "username": "Имя пользователя",
+    "forgot": "Забыли пароль?",
+    "reset": "Сбросить пароль",
+    "verify_email": "Подтвердите email"
+  }
+}

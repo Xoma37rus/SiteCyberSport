@@ -130,6 +130,26 @@
         </div>
     </section>
 
+    <!-- ==================== ПОДПИСКИ ==================== -->
+    <section class="section subscriptions-section" id="subscriptions">
+        <div class="container-wide">
+            <div class="section-header">
+                <h2>Подписки</h2>
+                <p class="section-subtitle">Выберите подходящий тариф и получите доступ к премиум-функциям</p>
+            </div>
+            <div class="subscriptions-carousel" id="subscriptions-carousel">
+                <button class="subscriptions-carousel__btn subscriptions-carousel__btn--left" id="carousel-prev" aria-label="Предыдущая подписка">&#10094;</button>
+                <div class="subscriptions-carousel__track" id="carousel-track">
+                    <!-- Карточки рендерятся через JS из массива subscriptions -->
+                </div>
+                <button class="subscriptions-carousel__btn subscriptions-carousel__btn--right" id="carousel-next" aria-label="Следующая подписка">&#10095;</button>
+            </div>
+            <div class="subscriptions-carousel__footer">
+                <a href="/subscriptions" class="btn btn-secondary">Показать всё →</a>
+            </div>
+        </div>
+    </section>
+
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-section">
@@ -149,5 +169,159 @@
             <p>&copy; 2026 EasyCyberPro. Все права защищены.</p>
         </div>
     </footer>
+
+    <!-- JavaScript для карусели подписок -->
+    <script>
+    // ==================== ДАННЫЕ ПОДПИСОК ====================
+    const subscriptions = [
+        {
+            id: 1,
+            title: "Стартовая",
+            icon: "🚀",
+            duration: "1 месяц",
+            price: "199 ₽",
+            pricePeriod: "в месяц",
+            desc: "Идеальный выбор для новичков, которые хотят попробовать платформу.",
+            features: [
+                { text: "Доступ к турнирам", enabled: true },
+                { text: "Базовая статистика", enabled: true },
+                { text: "Таблица лидеров", enabled: true },
+                { text: "Тренерские сессии", enabled: false },
+                { text: "Расширенная аналитика", enabled: false },
+                { text: "Приоритетная поддержка", enabled: false }
+            ],
+            featured: false
+        },
+        {
+            id: 2,
+            title: "Базовая",
+            icon: "⚡",
+            duration: "3 месяца",
+            price: "499 ₽",
+            pricePeriod: "за 3 месяца (166 ₽/мес)",
+            desc: "Для активных игроков, которые хотят развиваться в киберспорте.",
+            features: [
+                { text: "Все функции Стартовой", enabled: true },
+                { text: "Тренерские сессии (2/мес)", enabled: true },
+                { text: "Расширенная статистика", enabled: true },
+                { text: "История рейтинга ELO", enabled: true },
+                { text: "Приоритетная поддержка", enabled: false },
+                { text: "Экспорт статистики", enabled: false }
+            ],
+            featured: false
+        },
+        {
+            id: 3,
+            title: "Премиум",
+            icon: "👑",
+            duration: "6 месяцев",
+            price: "899 ₽",
+            pricePeriod: "за 6 месяцев (150 ₽/мес)",
+            desc: "Максимальный набор для серьёзных киберспортсменов.",
+            features: [
+                { text: "Все функции Базовой", enabled: true },
+                { text: "Безлимитные тренерские сессии", enabled: true },
+                { text: "Расширенная аналитика", enabled: true },
+                { text: "Приоритетная поддержка 24/7", enabled: true },
+                { text: "Экспорт статистики (CSV/PDF)", enabled: true },
+                { text: "Эксклюзивные турниры", enabled: true }
+            ],
+            featured: true
+        },
+        {
+            id: 4,
+            title: "Командная",
+            icon: "🏅",
+            duration: "12 месяцев",
+            price: "1 499 ₽",
+            pricePeriod: "за 12 месяцев (125 ₽/мес)",
+            desc: "Для команд и организаций, которые стремятся к победам.",
+            features: [
+                { text: "Все функции Премиум", enabled: true },
+                { text: "До 10 участников команды", enabled: true },
+                { text: "Командная аналитика", enabled: true },
+                { text: "Персональный менеджер", enabled: true },
+                { text: "API-доступ к данным", enabled: true },
+                { text: "Брендирование команды", enabled: true }
+            ],
+            featured: false
+        }
+    ];
+
+    // ==================== РЕНДЕР КАРТОЧКИ ====================
+    function renderSubscriptionCard(sub, isCarousel = true) {
+        const featuresHtml = sub.features.map(f =>
+            `<li class="${f.enabled ? '' : 'subscription-card__features li--disabled'}">${f.text}</li>`
+        ).join('');
+
+        const cardClass = `subscription-card${sub.featured ? ' subscription-card--featured' : ''}`;
+
+        return `
+            <div class="${cardClass}" id="subscription-${sub.id}" data-subscription-id="${sub.id}">
+                <div class="subscription-card__icon">${sub.icon}</div>
+                <div class="subscription-card__title">${sub.title}</div>
+                <div class="subscription-card__duration">${sub.duration}</div>
+                <div class="subscription-card__price">${sub.price}</div>
+                <div class="subscription-card__price-period">${sub.pricePeriod}</div>
+                <div class="subscription-card__desc">${sub.desc}</div>
+                <ul class="subscription-card__features">${featuresHtml}</ul>
+                <div class="subscription-card__actions">
+                    <button class="btn-subscribe" disabled title="Функция в разработке">Оформить (скоро)</button>
+                    <div class="subscription-card__offert">
+                        <a href="#" class="offert-link" data-subscription-id="${sub.id}">📄 Договор оферты</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ==================== КАРУСЕЛЬ НА ГЛАВНОЙ ====================
+    function initCarousel() {
+        const track = document.getElementById('carousel-track');
+        const prevBtn = document.getElementById('carousel-prev');
+        const nextBtn = document.getElementById('carousel-next');
+
+        if (!track) return; // Нет на странице — выходим
+
+        // Рендерим карточки
+        track.innerHTML = subscriptions.map(sub =>
+            `<div class="subscriptions-carousel__slide">
+                ${renderSubscriptionCard(sub, true)}
+            </div>`
+        ).join('');
+
+        // Навигация кнопками
+        const scrollAmount = 344; // 320px + 24px gap
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            });
+        }
+
+        // Клик по карточке → переход на страницу подписок с якорем
+        track.addEventListener('click', (e) => {
+            const card = e.target.closest('.subscription-card');
+            if (!card) return;
+
+            // Проверяем, не клик ли по ссылке оферты
+            if (e.target.closest('.offert-link')) return;
+
+            e.preventDefault();
+            const subId = card.dataset.subscriptionId;
+            // Переход на страницу подписок с параметром
+            window.location.href = `/subscriptions?highlight=${subId}`;
+        });
+    }
+
+    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+    document.addEventListener('DOMContentLoaded', initCarousel);
+    </script>
 </body>
 </html>

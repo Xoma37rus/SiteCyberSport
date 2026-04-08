@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://easycyber:easycyber_pass@db:5432/easycyberpro
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - STEAM_API_KEY=${STEAM_API_KEY:-}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+    volumes:
+      - ./static/uploads:/app/static/uploads
+      - ./error.log:/app/error.log
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - easycybernet
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: easycyberpro
+      POSTGRES_USER: easycyber
+      POSTGRES_PASSWORD: easycyber_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U easycyber -d easycyberpro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - easycybernet
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - easycybernet
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/var/www/static:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - easycybernet
+
+volumes:
+  postgres_data:
+
+networks:
+  easycybernet:
+    driver: bridge

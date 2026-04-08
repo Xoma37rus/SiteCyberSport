@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Мои жалобы - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="reports-container">
+        <h1 style="color: var(--text-primary); margin-bottom: 30px;">🚨 Мои жалобы</h1>
+
+        <!-- Форма создания жалобы -->
+        <div class="report-form">
+            <h2 style="color: var(--text-primary); margin-bottom: 20px;">Подать жалобу</h2>
+            <form action="/reports/create" method="POST" id="reportForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Тип жалобы</label>
+                    <select name="report_type" required style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                        {% for type in report_types %}
+                        <option value="{{ type }}">{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Описание</label>
+                    <textarea name="description" required minlength="20" rows="4" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); resize: vertical;" placeholder="Опишите ситуацию подробно (минимум 20 символов)..."></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">ID матча (опционально)</label>
+                        <input type="number" name="match_id" placeholder="123" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">ID пользователя (опционально)</label>
+                        <input type="number" name="reported_user_id" placeholder="456" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-weight: 600;">Ссылки на доказательства (опционально)</label>
+                    <input type="text" name="evidence_urls" placeholder="https://imgur.com/..., https://youtu.be/..." style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Отправить жалобу</button>
+            </form>
+        </div>
+
+        <!-- Список жалоб -->
+        {% if reports %}
+        <h2 style="color: var(--text-primary); margin-bottom: 20px;">История жалоб</h2>
+        {% for report in reports %}
+        <div class="report-item {{ report.status.value if report.status else 'pending' }}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div>
+                    <span style="font-weight: 600; color: var(--text-primary);">{{ report.report_type.value if report.report_type else 'unknown' }}</span>
+                    <span style="color: var(--text-secondary); font-size: 13px; margin-left: 12px;">
+                        {{ report.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </span>
+                </div>
+                <span style="
+                    padding: 4px 12px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    background: {% if report.status.value == 'pending' %}rgba(251, 191, 36, 0.2){% elif report.status.value == 'resolved' %}rgba(52, 211, 153, 0.2){% elif report.status.value == 'dismissed' %}rgba(248, 113, 113, 0.2){% else %}rgba(59, 130, 246, 0.2){% endif %};
+                    color: {% if report.status.value == 'pending' %}#fbbf24{% elif report.status.value == 'resolved' %}#34d399{% elif report.status.value == 'dismissed' %}#f87171{% else %}#3b82f6{% endif %};
+                ">
+                    {{ report.status.value if report.status else 'pending' }}
+                </span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 8px 0;">{{ report.description[:150] }}{{ "..." if report.description | length > 150 }}</p>
+            {% if report.resolution %}
+            <div style="background: var(--bg-card); border-radius: 6px; padding: 12px; margin-top: 8px;">
+                <strong style="color: var(--text-primary); font-size: 13px;">Решение:</strong>
+                <span style="color: var(--text-secondary); font-size: 13px;">{{ report.resolution }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 16px;">🛡️</p>
+            <p>У вас пока нет жалоб</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="/static/theme-switcher.js"></script>
+</body>
+</html>

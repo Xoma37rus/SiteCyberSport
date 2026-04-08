@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Статистика {{ target_user.username }} - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/charts.js"></script>
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="stats-charts-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="color: var(--text-primary);">📊 Статистика: {{ target_user.username }}</h1>
+            <a href="/stats/api/{{ target_user.id }}/export" class="btn btn-secondary" style="text-decoration: none;">Экспорт CSV</a>
+        </div>
+
+        <!-- Общая статистика -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 30px;">
+            <div class="chart-card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 700; color: var(--accent-cyan);">{{ target_user.total_matches }}</div>
+                <div style="color: var(--text-secondary); font-size: 14px;">Матчей</div>
+            </div>
+            <div class="chart-card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 700; color: #34d399;">{{ target_user.total_wins }}</div>
+                <div style="color: var(--text-secondary); font-size: 14px;">Побед</div>
+            </div>
+            <div class="chart-card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 700; color: #f87171;">{{ target_user.total_losses }}</div>
+                <div style="color: var(--text-secondary); font-size: 14px;">Поражений</div>
+            </div>
+            <div class="chart-card" style="text-align: center;">
+                <div style="font-size: 36px; font-weight: 700; color: #fbbf24;">
+                    {{ "%.1f"|format(target_user.total_wins / target_user.total_matches * 100 if target_user.total_matches > 0 else 0) }}%
+                </div>
+                <div style="color: var(--text-secondary); font-size: 14px;">Винрейт</div>
+            </div>
+        </div>
+
+        <!-- График ELO -->
+        <div class="chart-card">
+            <h3 style="color: var(--text-primary); margin-bottom: 20px;">📈 Прогресс ELO</h3>
+            <canvas id="eloChart" style="width: 100%; height: 300px;"></canvas>
+        </div>
+
+        <!-- Рейтинги по дисциплинам -->
+        {% if ratings %}
+        <div class="chart-card">
+            <h3 style="color: var(--text-primary); margin-bottom: 20px;">🎮 Рейтинги по дисциплинам</h3>
+            <canvas id="disciplineChart" style="width: 100%; height: 250px;"></canvas>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 20px;">
+            {% for rating in ratings %}
+            <div class="chart-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="color: var(--text-primary); margin: 0;">{{ rating.discipline.name if rating.discipline else 'Unknown' }}</h4>
+                    <span class="level-badge level-{{ rating.level }}">Lvl {{ rating.level }}</span>
+                </div>
+                <div style="font-size: 28px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 8px;">{{ rating.elo }}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                    <span>🏆 {{ rating.wins }}W</span>
+                    <span>💀 {{ rating.losses }}L</span>
+                    <span>📊 {{ "%.1f"|format(rating.wins / rating.games_played * 100 if rating.games_played > 0 else 0) }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- История ELO -->
+        {% if elo_history %}
+        <div class="chart-card">
+            <h3 style="color: var(--text-primary); margin-bottom: 20px;">📜 История изменений ELO</h3>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for change in elo_history[-50:]|reverse %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-secondary); font-size: 13px;">
+                        {{ change.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </span>
+                    <span style="color: var(--text-secondary); font-size: 13px;">{{ change.reason }}</span>
+                    <span style="color: {% if change.elo_change >= 0 %}#34d399{% else %}#f87171{% endif %}; font-weight: 700;">
+                        {{ "+" if change.elo_change >= 0 }}{{ change.elo_change }}
+                    </span>
+                    <span style="color: var(--accent-cyan); font-weight: 600;">→ {{ change.elo_after }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="/static/theme-switcher.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const charts = new StatsCharts();
+
+            // ELO прогресс
+            const eloData = {{ elo_history | tojson if elo_history else '[]' }};
+            charts.drawEloProgress('eloChart', eloData);
+
+            // Дисциплины
+            const ratings = {{ ratings | tojson if ratings else '[]' }};
+            if (ratings.length > 0) {
+                charts.drawDisciplineBars('disciplineChart', ratings.map(r => ({
+                    name: r.discipline ? r.discipline.name : 'Unknown',
+                    elo: r.elo
+                })));
+            }
+        });
+    </script>
+</body>
+</html>

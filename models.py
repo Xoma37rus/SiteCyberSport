@@ -54,6 +54,9 @@ class User(Base):
     total_wins = Column(Integer, default=0)
     total_losses = Column(Integer, default=0)
 
+    # Steam интеграция
+    steam_id_64 = Column(String(20), nullable=True, unique=True, index=True)
+
     news_posts = relationship("News", back_populates="author", foreign_keys="News.author_id")
     teams = relationship("Team", back_populates="captain", foreign_keys="Team.captain_id")
     participations = relationship("TournamentParticipation", back_populates="user")

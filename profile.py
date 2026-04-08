@@ -55,12 +55,48 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         "win_rate": (user.total_wins / user.total_matches * 100) if user.total_matches > 0 else 0
     }
 
+    # Рейтинг ученика (если пользователь — ученик)
+    student_rating = None
+    next_grade_threshold = 1500
+    grade_progress_pct = 0.0
+
+    user_role = user.role or ""
+    if user_role.startswith('student') or user_role == 'user':
+        from extended_models import StudentRating
+        student_rating = db.query(StudentRating).filter(
+            StudentRating.student_id == user.id
+        ).first()
+
+        if student_rating:
+            # Порог следующего грейда
+            grade_thresholds = {
+                "N": 1500, "F": 2500, "E": 3500, "D": 4500,
+                "C": 5500, "B": 6500, "A": 7500, "S": 8500,
+                "SS": 9500, "SSS": 10000
+            }
+            next_grade_threshold = grade_thresholds.get(student_rating.grade, 10000)
+
+            # Прогресс до следующего грейда
+            current_grade_min = {
+                "N": 0, "F": 1500, "E": 2500, "D": 3500,
+                "C": 4500, "B": 5500, "A": 6500, "S": 7500,
+                "SS": 8500, "SSS": 9500
+            }
+            grade_min = current_grade_min.get(student_rating.grade, 0)
+            if next_grade_threshold > grade_min:
+                grade_progress_pct = ((student_rating.score - grade_min) / (next_grade_threshold - grade_min)) * 100
+            else:
+                grade_progress_pct = 100.0
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user": user,
         "teams": user_teams,
         "recent_participations": participations,
-        "stats": stats
+        "stats": stats,
+        "student_rating": student_rating,
+        "next_grade_threshold": next_grade_threshold,
+        "grade_progress_pct": round(grade_progress_pct, 1),
     })
 
 

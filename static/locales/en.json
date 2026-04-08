@@ -1,0 +1,77 @@
+{
+  "common": {
+    "home": "Home",
+    "tournaments": "Tournaments",
+    "leaderboard": "Leaderboard",
+    "news": "News",
+    "profile": "Profile",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "settings": "Settings",
+    "admin": "Admin Panel",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit"
+  },
+  "tournaments": {
+    "title": "Tournaments",
+    "active": "Active",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "register": "Register",
+    "bracket": "Tournament Bracket",
+    "participants": "Participants",
+    "prize_pool": "Prize Pool",
+    "format": "Format",
+    "start_date": "Start Date"
+  },
+  "rating": {
+    "title": "Rating",
+    "level": "Level",
+    "elo": "ELO",
+    "games": "Games",
+    "wins": "Wins",
+    "losses": "Losses",
+    "win_rate": "Win Rate",
+    "history": "History",
+    "progress": "Progress"
+  },
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit",
+    "avatar": "Avatar",
+    "bio": "About Me",
+    "stats": "Statistics",
+    "teams": "Teams",
+    "achievements": "Achievements"
+  },
+  "coach": {
+    "title": "Coaching",
+    "dashboard": "Coach Dashboard",
+    "students": "Students",
+    "sessions": "Training Sessions",
+    "schedule": "Schedule"
+  },
+  "ladders": {
+    "title": "Ladders",
+    "join": "Join",
+    "challenge": "Challenge",
+    "standings": "Standings",
+    "matches": "Matches"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "forgot": "Forgot password?",
+    "reset": "Reset Password",
+    "verify_email": "Verify your email"
+  }
+}

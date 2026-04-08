@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" href="/static/images/logo.jpg" type="image/jpeg">
+    <meta charset="UTF-8">
+    <title>Мой рейтинг ученика - EasyCyberPro</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .rating-hero {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        .rating-score {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00f0ff, #3a86ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .rating-grade {
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 12px;
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            margin-top: 10px;
+        }
+        .rating-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .rating-stat {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .rating-stat-value { font-size: 24px; font-weight: 700; color: var(--accent-cyan); }
+        .rating-stat-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px; }
+        .rating-change-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--border-color);
+        }
+        .rating-change-positive { border-left-color: #34d399; }
+        .rating-change-negative { border-left-color: #f87171; }
+        .change-value { font-weight: 700; font-size: 16px; }
+        .change-positive { color: #34d399; }
+        .change-negative { color: #f87171; }
+        .behavior-bar {
+            width: 100%;
+            height: 12px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .behavior-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div style="max-width: 900px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="text-align: center; margin-bottom: 30px;">🎓 Мой рейтинг ученика</h1>
+
+        <!-- Hero блок рейтинга -->
+        <div class="rating-hero">
+            <div class="rating-score">{{ rating.score }}</div>
+            <div class="rating-grade" style="background: {{ rating.grade_color }};">
+                Grade: {{ rating.grade }}
+            </div>
+            <p style="color: var(--text-secondary); margin-top: 16px;">
+                {% if coach %}
+                Тренер: <strong style="color: var(--text-primary);">{{ coach.username }}</strong>
+                {% else %}
+                Тренер не назначен
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Статистика -->
+        <div class="rating-stats-grid">
+            <div class="rating-stat">
+                <div class="rating-stat-value">{{ rating.training_completed }}</div>
+                <div class="rating-stat-label">Тренировок пройдено</div>
+            </div>
+            <div class="rating-stat">
+                <div class="rating-stat-value" style="color: #f87171;">{{ rating.training_missed }}</div>
+                <div class="rating-stat-label">Пропущено</div>
+            </div>
+            <div class="rating-stat">
+                <div class="rating-stat-value" style="color: {% if rating.behavior_score >= 70 %}#34d399{% elif rating.behavior_score >= 40 %}#fbbf24{% else %}#f87171{% endif %};">
+                    {{ rating.behavior_score }}/100
+                </div>
+                <div class="rating-stat-label">Поведение</div>
+                <div class="behavior-bar">
+                    <div class="behavior-fill" style="width: {{ rating.behavior_score }}%; background: {% if rating.behavior_score >= 70 %}#34d399{% elif rating.behavior_score >= 40 %}#fbbf24{% else %}#f87171{% endif %};"></div>
+                </div>
+            </div>
+            <div class="rating-stat">
+                <div class="rating-stat-value">{{ changes | length }}</div>
+                <div class="rating-stat-label">Изменений</div>
+            </div>
+        </div>
+
+        {% if rating.notes %}
+        <div style="background: var(--bg-secondary); border-radius: 10px; padding: 20px; margin-bottom: 30px;">
+            <h3 style="color: var(--text-primary); margin-bottom: 10px;">📝 Заметки тренера</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6;">{{ rating.notes }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Шкала грейдов -->
+        <div style="background: var(--bg-card); border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+            <h3 style="color: var(--text-primary); margin-bottom: 16px;">📊 Шкала грейдов</h3>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                {% for g in ["N", "F", "E", "D", "C", "B", "A", "S", "SS", "SSS"] %}
+                <div style="flex: 1; min-width: 60px; text-align: center; padding: 10px 8px; border-radius: 8px; background: {% if g == rating.grade %}{{ rating.grade_color }}{% else %}var(--bg-secondary){% endif %}; color: {% if g == rating.grade %}#fff{% else %}var(--text-secondary){% endif %};">
+                    <div style="font-weight: 700; font-size: 18px;">{{ g }}</div>
+                    <div style="font-size: 10px; opacity: 0.7;">
+                        {% if g == "N" %}0-1499
+                        {% elif g == "F" %}1500+
+                        {% elif g == "E" %}2500+
+                        {% elif g == "D" %}3500+
+                        {% elif g == "C" %}4500+
+                        {% elif g == "B" %}5500+
+                        {% elif g == "A" %}6500+
+                        {% elif g == "S" %}7500+
+                        {% elif g == "SS" %}8500+
+                        {% elif g == "SSS" %}9500+
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- История изменений -->
+        <h2 style="color: var(--text-primary); margin-bottom: 20px;">📜 История изменений</h2>
+        {% if changes %}
+        {% for change in changes %}
+        <div class="rating-change-item {% if change.score_change >= 0 %}rating-change-positive{% else %}rating-change-negative{% endif %}">
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: var(--text-primary);">
+                    {{ change.reason or "Изменение рейтинга" }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">
+                    Изменил: <strong>{{ change.changed_by.username if change.changed_by else "Система" }}</strong> •
+                    {{ change.created_at.strftime('%d.%m.%Y %H:%M') }}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="change-value {% if change.score_change >= 0 %}change-positive{% else %}change-negative{% endif %}">
+                    {{ "+" if change.score_change >= 0 }}{{ change.score_change }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 12px;">
+                    {{ change.score_before }} → {{ change.score_after }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <p style="font-size: 48px; margin-bottom: 16px;">📊</p>
+            <p>История изменений пока пуста</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="/static/theme-switcher.js"></script>
+</body>
+</html>
